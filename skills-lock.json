@@ -78,6 +78,13 @@
       "skillPath": "skills/engineering/prototype/SKILL.md",
       "computedHash": "1e3ba2202a5b77b8aa50bc4447432331d6e42590e53ec0935689662cfed199ca"
     },
+    "react-native-architecture": {
+      "source": "wshobson/agents",
+      "commit": "c96b5f6552dba32e4492307493ee613581430715",
+      "sourceType": "github",
+      "skillPath": "plugins/frontend-mobile-development/skills/react-native-architecture/SKILL.md",
+      "computedHash": "de069a2d3dde56002ce37ebb8feea6fb770a300b671d83d1fb50bae200babcd1"
+    },
     "tdd": {
       "source": "mattpocock/skills",
       "commit": "6f7f7831a625f040a8e06a0e7954826b87ce775a",
