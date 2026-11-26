@@ -29,6 +29,13 @@
       "skillPath": "skills/engineering/domain-modeling/SKILL.md",
       "computedHash": "7d4453f798d7785c945972abe0871493caf884fa3ee82725cc71e783de6176ea"
     },
+    "expo-module": {
+      "source": "expo/skills",
+      "commit": "6d0506afe7df9334b60ad4b1ceb35969836f01a0",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-module/SKILL.md",
+      "computedHash": "5bb6039b1d5d6b6ba9639ad992fb18e3d837c46f287036e649ecfcf1088af916"
+    },
     "grill-me": {
       "source": "mattpocock/skills",
       "commit": "6f7f7831a625f040a8e06a0e7954826b87ce775a",

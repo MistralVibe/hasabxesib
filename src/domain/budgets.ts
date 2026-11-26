@@ -12,6 +12,13 @@ export function spentForCategory(transactions: Transaction[], categoryId: string
     .reduce((sum, t) => sum + t.amount, 0);
 }
 
+/** Sum of ALL expense transactions in a month, in minor units (any category). */
+export function spentInMonth(transactions: Transaction[], monthKey: string): Money {
+  return transactions
+    .filter((t) => t.type === 'expense' && isInMonth(t.date, monthKey))
+    .reduce((sum, t) => sum + t.amount, 0);
+}
+
 export interface BudgetProgress {
   budget: Budget;
   spent: Money;
@@ -43,7 +50,9 @@ export interface MonthBudgetSummary {
 
 export function monthBudgetSummary(budgets: Budget[], transactions: Transaction[], monthKey: string): MonthBudgetSummary {
   const totalBudget = budgets.reduce((s, b) => s + b.amount, 0);
-  const totalSpent = budgets.reduce((s, b) => s + spentForCategory(transactions, b.categoryId, monthKey), 0);
+  // Total spent this month counts ALL expenses (budgeted or not) — the home card
+  // must not show "0 spent" while the user spent money in unbudgeted categories.
+  const totalSpent = spentInMonth(transactions, monthKey);
   const ratio = totalBudget > 0 ? totalSpent / totalBudget : totalSpent > 0 ? Infinity : 0;
   const status: BudgetStatus = ratio >= 1 ? 'exceeded' : ratio >= WARNING_RATIO ? 'warning' : 'ok';
   return { totalBudget, totalSpent, ratio, status };

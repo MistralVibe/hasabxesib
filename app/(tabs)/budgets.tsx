@@ -126,7 +126,7 @@ export default function BudgetsScreen() {
                     </View>
                     <ProgressBar ratio={p.ratio} color={budgetStatusColor(p.status, { ok: c.accent, warning: c.warning, danger: c.danger })} />
                     <Text style={{ color: c.textSecondary, fontSize: theme.type.caption, marginTop: 4 }}>
-                      {t('budgets.spentOf', { spent: money(p.spent), cap: money(p.cap) })}
+                      {t('budgets.spentOf', { spent: money(p.spent), limit: money(p.cap) })}
                       {p.status === 'exceeded' ? ` · ${t('budgets.overBy', { amount: money(p.spent - p.cap) })}` : p.status === 'warning' ? '' : ` · ${t('budgets.remaining', { amount: money(p.cap - p.spent) })}`}
                     </Text>
                   </View>

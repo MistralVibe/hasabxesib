@@ -42,6 +42,22 @@ describe('monthBudgetSummary', () => {
     expect(summary.totalSpent).toBe(12000);
     expect(summary.status).toBe('warning'); // 12000/15000 = 0.8 exactly
   });
+
+  it('counts spending in unbudgeted categories toward totalSpent', () => {
+    const budgets = [budget]; // c-food, 10000
+    const txs = [tx(7000, 'c-food'), tx(2500, 'c-other'), tx(9000, 'c-food', '2026-11-10', 'income')];
+    const summary = monthBudgetSummary(budgets, txs, '2026-11');
+    expect(summary.totalSpent).toBe(9500); // 7000 + 2500, income excluded
+    expect(summary.ratio).toBeCloseTo(0.95);
+    expect(summary.status).toBe('warning');
+  });
+
+  it('ignores transactions from other months', () => {
+    const budgets = [budget];
+    const txs = [tx(7000, 'c-food'), tx(4000, 'c-food', '2026-10-31')];
+    const summary = monthBudgetSummary(budgets, txs, '2026-11');
+    expect(summary.totalSpent).toBe(7000);
+  });
 });
 
 describe('allBudgetsProgress + crossedThresholds', () => {

@@ -1,5 +1,7 @@
 import { crossedThresholds, allBudgetsProgress } from '@/domain/budgets';
 import { monthKeyOf, startOfDayISO } from '@/domain/dates';
+import { formatMoney } from '@/domain/money';
+import { getLocales } from 'expo-localization';
 import { scheduleNotification, cancelNotification, ensurePermissions } from './notifications';
 import { listBudgets, listTransactions, listCategories, getSettings, setSetting } from '@/db/repositories';
 import type { TranslationPath } from '@/i18n';
@@ -43,6 +45,8 @@ export async function refreshBudgetAlerts(t: (path: TranslationPath, params?: Re
   if (crossed.length === 0) return;
   const granted = await ensurePermissions();
   const progress = allBudgetsProgress(budgets, transactions, monthKey);
+  const currency = getSettings().currency;
+  const locale = getLocales()[0]?.languageTag ?? 'en-US';
   for (const c of crossed) {
     const category = categories.find((x) => x.id === c.categoryId);
     const name = categoryName(category, t);
@@ -56,14 +60,14 @@ export async function refreshBudgetAlerts(t: (path: TranslationPath, params?: Re
         await scheduleNotification({
           id: alertId(monthKey, c.budgetId, 'warning'),
           title: t('notifications.budgetWarningTitle'),
-          body: t('notifications.budgetWarningBody', { category: name, percent: pct }),
+          body: t('notifications.budgetWarningBody', { category: name, percent: pct, amount: formatMoney(p?.cap ?? 0, currency, locale) }),
           trigger: new Date(Date.now() + 1000),
         });
       } else {
         await scheduleNotification({
           id: alertId(monthKey, c.budgetId, 'exceeded'),
           title: t('notifications.budgetExceededTitle'),
-          body: t('notifications.budgetExceededBody', { category: name, percent: pct }),
+          body: t('notifications.budgetExceededBody', { category: name, percent: pct, amount: formatMoney(Math.max(0, (p?.spent ?? 0) - (p?.cap ?? 0)), currency, locale) }),
           trigger: new Date(Date.now() + 1000),
         });
       }
