@@ -20,9 +20,9 @@ function runMigrations(database: SQLite.SQLiteDatabase) {
     database.withTransactionSync(() => {
       database.execSync(MIGRATIONS[v]);
       if (v === current && !row) {
-        database.execSync('INSERT INTO schema_meta (version) VALUES (?)', [v + 1]);
+        database.runSync('INSERT INTO schema_meta (version) VALUES (?)', [v + 1]);
       } else {
-        database.execSync('UPDATE schema_meta SET version = ?', [v + 1]);
+        database.runSync('UPDATE schema_meta SET version = ?', [v + 1]);
       }
     });
   }

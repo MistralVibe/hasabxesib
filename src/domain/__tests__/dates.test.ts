@@ -38,8 +38,9 @@ describe('nextDueAfter', () => {
   });
 
   it('weekly advances by 7 days', () => {
-    expect(nextDueAfter('2026-11-01', 'weekly', '2026-11-10')).toBe('2026-11-08');
+    expect(nextDueAfter('2026-11-01', 'weekly', '2026-11-10')).toBe('2026-11-15');
     expect(nextDueAfter('2026-11-01', 'weekly', '2026-11-08')).toBe('2026-11-15');
+    expect(nextDueAfter('2026-11-01', 'weekly', '2026-11-15')).toBe('2026-11-22');
   });
 
   it('monthly keeps day of month', () => {

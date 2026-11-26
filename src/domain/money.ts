@@ -33,7 +33,13 @@ export function toMinor(input: string, currency: string): number | null {
  * Parse an amount input into a positive decimal number, or null when invalid.
  */
 export function parseAmountInput(input: string): number | null {
-  const normalized = input.trim().replace(/\s/g, '').replace(',', '.');
+  let normalized = input.trim().replace(/\s|\u00A0/g, '');
+  if (normalized.includes(',') && normalized.includes('.')) {
+    // "1,234.56" — comma is a thousands separator.
+    normalized = normalized.replace(/,/g, '');
+  } else {
+    normalized = normalized.replace(',', '.');
+  }
   if (!/^\d+(\.\d+)?$/.test(normalized)) return null;
   const value = Number(normalized);
   return value > 0 ? value : null;

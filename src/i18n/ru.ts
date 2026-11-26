@@ -32,6 +32,7 @@ export const ru: Dictionary = {
     search: 'Поиск',
     none: 'Нет',
     confirmDelete: 'Точно удалить?',
+    unlock: 'Разблокировать',
     error: 'Что-то пошло не так',
     back: 'Назад',
     next: 'Далее',

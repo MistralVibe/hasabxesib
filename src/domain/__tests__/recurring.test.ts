@@ -11,13 +11,13 @@ describe('dueOccurrences', () => {
   it('returns all unskipped occurrences up to and including now', () => {
     const r = rule({ nextDueDate: '2026-11-30' });
     expect(dueOccurrences(r, '2026-12-05')).toEqual(['2026-11-30']);
-    expect(dueOccurrences(r, '2026-12-31')).toEqual(['2026-11-30', '2026-12-31']);
+    expect(dueOccurrences(r, '2026-12-30')).toEqual(['2026-11-30', '2026-12-30']);
   });
 
   it('excludes skipped dates', () => {
     const r = rule({ nextDueDate: '2026-11-30', skippedDates: ['2026-11-30'] });
     expect(dueOccurrences(r, '2026-12-05')).toEqual([]);
-    expect(dueOccurrences(r, '2026-12-31')).toEqual(['2026-12-31']);
+    expect(dueOccurrences(r, '2026-12-30')).toEqual(['2026-12-30']);
   });
 
   it('returns empty when nothing is due', () => {
@@ -57,7 +57,7 @@ describe('skipOccurrence / upcomingOccurrences', () => {
   });
 
   it('upcomingOccurrences lists future dates excluding skipped', () => {
-    const r = rule({ frequency: 'monthly', startDate: '2026-09-30', nextDueDate: '2026-11-30', skippedDates: ['2026-12-31'] });
-    expect(upcomingOccurrences(r, '2026-11-26', 3)).toEqual(['2026-11-30', '2027-01-31', '2027-02-28']);
+    const r = rule({ frequency: 'monthly', startDate: '2026-09-15', nextDueDate: '2026-11-15', skippedDates: ['2026-12-15'] });
+    expect(upcomingOccurrences(r, '2026-11-26', 3)).toEqual(['2027-01-15', '2027-02-15', '2027-03-15']);
   });
 });

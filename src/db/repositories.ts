@@ -1,3 +1,4 @@
+import type { SQLiteBindValue } from 'expo-sqlite';
 import { getDb } from './database';
 import { PREDEFINED_CATEGORIES } from './seed';
 import {
@@ -86,7 +87,7 @@ export function insertAccount(a: Omit<Account, 'id' | 'createdAt'>): Account {
 export function updateAccount(id: string, patch: Partial<Omit<Account, 'id' | 'createdAt'>>): void {
   const db = getDb();
   const sets: string[] = [];
-  const vals: unknown[] = [];
+  const vals: SQLiteBindValue[] = [];
   const map: [keyof typeof patch, string][] = [
     ['name', 'name'], ['type', 'type'], ['icon', 'icon'], ['color', 'color'],
     ['openingBalance', 'opening_balance'], ['isArchived', 'is_archived'],
@@ -94,7 +95,7 @@ export function updateAccount(id: string, patch: Partial<Omit<Account, 'id' | 'c
   for (const [k, col] of map) {
     if (patch[k] !== undefined) {
       sets.push(`${col} = ?`);
-      vals.push(k === 'isArchived' ? (patch[k] ? 1 : 0) : patch[k]);
+      vals.push((k === 'isArchived' ? (patch[k] ? 1 : 0) : patch[k]) as SQLiteBindValue);
     }
   }
   if (sets.length) db.runSync(`UPDATE accounts SET ${sets.join(', ')} WHERE id = ?`, [...vals, id]);
@@ -140,13 +141,13 @@ export function insertTransaction(t: Omit<Transaction, 'id' | 'createdAt' | 'upd
 export function updateTransaction(id: string, patch: Partial<Omit<Transaction, 'id' | 'createdAt'>>): void {
   const db = getDb();
   const sets: string[] = [];
-  const vals: unknown[] = [];
+  const vals: SQLiteBindValue[] = [];
   const map: [keyof typeof patch, string][] = [
     ['accountId', 'account_id'], ['categoryId', 'category_id'], ['type', 'type'],
     ['amount', 'amount'], ['note', 'note'], ['date', 'date'], ['recurringRuleId', 'recurring_rule_id'],
   ];
   for (const [k, col] of map) {
-    if (patch[k] !== undefined) { sets.push(`${col} = ?`); vals.push(patch[k]); }
+    if (patch[k] !== undefined) { sets.push(`${col} = ?`); vals.push(patch[k] as SQLiteBindValue); }
   }
   if (sets.length) {
     sets.push('updated_at = ?'); vals.push(now());
@@ -180,7 +181,7 @@ export function upsertBudget(b: { id?: string; categoryId: string; amount: numbe
   const existing = b.id ? db.getFirstSync<Row>('SELECT * FROM budgets WHERE id = ?', [b.id]) : db.getFirstSync<Row>('SELECT * FROM budgets WHERE category_id = ?', [b.categoryId]);
   const ts = now();
   if (existing) {
-    db.runSync('UPDATE budgets SET amount = ?, updated_at = ? WHERE id = ?', [b.amount, ts, existing.id]);
+    db.runSync('UPDATE budgets SET amount = ?, updated_at = ? WHERE id = ?', [b.amount, ts, existing.id as string]);
     return { id: existing.id as string, categoryId: existing.category_id as string, amount: b.amount, createdAt: existing.created_at as string, updatedAt: ts };
   }
   const row: Budget = { id: newId(), categoryId: b.categoryId, amount: b.amount, createdAt: ts, updatedAt: ts };
@@ -209,7 +210,7 @@ export function insertRecurringRule(r: Omit<RecurringRule, 'id' | 'createdAt' | 
 export function updateRecurringRule(id: string, patch: Partial<Omit<RecurringRule, 'id' | 'createdAt'>>): void {
   const db = getDb();
   const sets: string[] = [];
-  const vals: unknown[] = [];
+  const vals: SQLiteBindValue[] = [];
   const map: [keyof typeof patch, string, boolean][] = [
     ['accountId', 'account_id', false], ['categoryId', 'category_id', false], ['type', 'type', false],
     ['amount', 'amount', false], ['note', 'note', false], ['frequency', 'frequency', false],
@@ -219,7 +220,7 @@ export function updateRecurringRule(id: string, patch: Partial<Omit<RecurringRul
   for (const [k, col, isJson] of map) {
     if (patch[k] !== undefined) {
       sets.push(`${col} = ?`);
-      let v = patch[k];
+      let v: SQLiteBindValue = patch[k] as SQLiteBindValue;
       if (isJson) v = JSON.stringify(v);
       if (k === 'isActive') v = v ? 1 : 0;
       vals.push(v);

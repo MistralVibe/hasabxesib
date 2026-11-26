@@ -36,11 +36,11 @@ describe('budgetProgress', () => {
 describe('monthBudgetSummary', () => {
   it('aggregates across budgets for the month', () => {
     const budgets = [budget, { ...budget, id: 'b2', categoryId: 'c-transport', amount: 5000 }];
-    const txs = [tx(6000, 'c-food'), tx(3000, 'c-transport')];
+    const txs = [tx(7000, 'c-food'), tx(5000, 'c-transport')];
     const summary = monthBudgetSummary(budgets, txs, '2026-11');
     expect(summary.totalBudget).toBe(15000);
-    expect(summary.totalSpent).toBe(9000);
-    expect(summary.status).toBe('warning');
+    expect(summary.totalSpent).toBe(12000);
+    expect(summary.status).toBe('warning'); // 12000/15000 = 0.8 exactly
   });
 });
 

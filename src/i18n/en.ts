@@ -30,6 +30,7 @@ export const en = {
     search: 'Search',
     none: 'None',
     confirmDelete: 'Are you sure you want to delete this?',
+    unlock: 'Unlock',
     error: 'Something went wrong',
     back: 'Back',
     next: 'Next',

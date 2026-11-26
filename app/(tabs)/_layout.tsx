@@ -20,23 +20,23 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="home"
-        options={{ title: t('tabs.home'), tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} /> }}
+        options={{ title: t('tabs.home'), tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={typeof color === "string" ? color : c.tabBarInactive} /> }}
       />
       <Tabs.Screen
         name="transactions"
-        options={{ title: t('tabs.transactions'), tabBarIcon: ({ color, size }) => <Ionicons name="swap-vertical" size={size} color={color} /> }}
+        options={{ title: t('tabs.transactions'), tabBarIcon: ({ color, size }) => <Ionicons name="swap-vertical" size={size} color={typeof color === "string" ? color : c.tabBarInactive} /> }}
       />
       <Tabs.Screen
         name="budgets"
-        options={{ title: t('tabs.budgets'), tabBarIcon: ({ color, size }) => <Ionicons name="pie-chart" size={size} color={color} /> }}
+        options={{ title: t('tabs.budgets'), tabBarIcon: ({ color, size }) => <Ionicons name="pie-chart" size={size} color={typeof color === "string" ? color : c.tabBarInactive} /> }}
       />
       <Tabs.Screen
         name="reports"
-        options={{ title: t('tabs.reports'), tabBarIcon: ({ color, size }) => <Ionicons name="bar-chart" size={size} color={color} /> }}
+        options={{ title: t('tabs.reports'), tabBarIcon: ({ color, size }) => <Ionicons name="bar-chart" size={size} color={typeof color === "string" ? color : c.tabBarInactive} /> }}
       />
       <Tabs.Screen
         name="settings"
-        options={{ title: t('tabs.settings'), tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={color} /> }}
+        options={{ title: t('tabs.settings'), tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={typeof color === "string" ? color : c.tabBarInactive} /> }}
       />
     </Tabs>
   );
