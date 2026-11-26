@@ -15,6 +15,7 @@ import { toMinor, minorToInputString } from '@/domain/money';
 import { startOfDayISO } from '@/domain/dates';
 import { Account } from '@/domain/types';
 import { Button } from '@/components/ui/Button';
+import { DateField } from '@/components/ui/DateField';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 
@@ -252,12 +253,7 @@ export default function AccountsScreen() {
             {amount && toMinor(amount, currency) !== null ? (
               <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>≈ {money(toMinor(amount, currency) ?? 0)}</Text>
             ) : null}
-            <TextInput
-              value={tDate} onChangeText={setTDate}
-              placeholder="yyyy-mm-dd" placeholderTextColor={c.textSecondary}
-              autoCapitalize="none"
-              style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.background }]}
-            />
+            <DateField label={t('common.date')} value={tDate} onChange={setTDate} />
             <TextInput
               value={tNote} onChangeText={setTNote}
               placeholder={t('transactions.notePlaceholder')} placeholderTextColor={c.textSecondary}

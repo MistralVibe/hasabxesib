@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { AppState, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -13,7 +14,9 @@ import { Button } from '@/components/ui/Button';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 function StartupGate({ children }: { children: React.ReactNode }) {
-  const { settings, loaded } = useSettingsStore();
+  const { settings, loaded } = useSettingsStore(
+    useShallow((s) => ({ settings: s.settings, loaded: s.loaded })),
+  );
   const { t } = useI18n();
   const { theme } = useTheme();
   const [locked, setLocked] = useState(false);

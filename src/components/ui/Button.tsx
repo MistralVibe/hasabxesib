@@ -27,16 +27,22 @@ export function Button({
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: bg, borderRadius: theme.radii.md, borderCurve: 'continuous', opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
+        variant === 'primary' && theme.shadows.fab,
+        {
+          backgroundColor: bg,
+          borderRadius: theme.radii.full,
+          borderCurve: 'continuous',
+          opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
+        },
         style,
       ]}
       accessibilityRole="button"
     >
-      <Text style={{ color: fg, fontSize: theme.type.body, fontWeight: '600' }}>{title}</Text>
+      <Text style={{ color: fg, fontSize: theme.type.body, fontWeight: '700' }}>{title}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  button: { paddingVertical: 12, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center' },
+  button: { paddingVertical: 14, paddingHorizontal: 22, alignItems: 'center', justifyContent: 'center' },
 });

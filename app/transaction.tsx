@@ -15,6 +15,8 @@ import { parseAmountInput, toMinor, minorToInputString } from '@/domain/money';
 import { startOfDayISO } from '@/domain/dates';
 import { TransactionType } from '@/domain/types';
 import { Button } from '@/components/ui/Button';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { DateField } from '@/components/ui/DateField';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
 
 export default function TransactionModal() {
@@ -84,26 +86,15 @@ export default function TransactionModal() {
           {existing ? t('transactions.edit') : t('transactions.add')}
         </Text>
 
-        <View style={styles.segmentRow}>
-          {(['expense', 'income'] as const).map((opt) => (
-            <Pressable
-              key={opt}
-              onPress={() => { setType(opt); setCategoryId(undefined); }}
-              style={[
-                styles.segment,
-                {
-                  backgroundColor: type === opt ? (opt === 'income' ? c.income : c.expense) : c.surface,
-                  borderColor: c.border,
-                  borderRadius: theme.radii.md, borderCurve: 'continuous',
-                },
-              ]}
-            >
-              <Text style={{ color: type === opt ? '#FFFFFF' : c.text, fontWeight: '700', fontSize: theme.type.body }}>
-                {t(opt === 'income' ? 'common.income' : 'common.expense')}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+        <SegmentedControl
+          options={[
+            { value: 'expense', label: t('common.expense') },
+            { value: 'income', label: t('common.income') },
+          ]}
+          value={type}
+          onChange={(v) => { setType(v); setCategoryId(undefined); }}
+          getColor={(v) => (v === 'income' ? c.income : c.expense)}
+        />
 
         <TextInput
           value={amountInput}
@@ -162,14 +153,7 @@ export default function TransactionModal() {
           placeholderTextColor={c.textSecondary}
           style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.surface }]}
         />
-        <TextInput
-          value={date}
-          onChangeText={setDate}
-          placeholder="yyyy-mm-dd"
-          placeholderTextColor={c.textSecondary}
-          autoCapitalize="none"
-          style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.surface }]}
-        />
+        <DateField label={t('common.date')} value={date} onChange={setDate} />
 
         {error ? <Text style={{ color: c.danger, fontSize: theme.type.body }}>{error}</Text> : null}
 

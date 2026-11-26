@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Alert, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { Screen } from '@/components/ui/Screen';
@@ -26,6 +28,7 @@ export default function SettingsScreen() {
   const c = theme.colors;
 
   const [busy, setBusy] = useState('');
+  const router = useRouter();
 
   const toggleLock = async (value: boolean) => {
     if (value) {
@@ -155,6 +158,18 @@ export default function SettingsScreen() {
         </Text>
       </Card>
 
+      <SectionTitle title={t('settings.manage')} style={styles.gap} />
+      <Card style={styles.card}>
+        <Pressable style={[styles.rowBetween, styles.manageRow]} onPress={() => router.push('/accounts')}>
+          <Text style={{ color: c.text, fontWeight: '600', fontSize: theme.type.body }}>{t('settings.accounts')}</Text>
+          <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
+        </Pressable>
+        <Pressable style={styles.rowBetween} onPress={() => router.push('/recurring')}>
+          <Text style={{ color: c.text, fontWeight: '600', fontSize: theme.type.body }}>{t('settings.recurring')}</Text>
+          <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
+        </Pressable>
+      </Card>
+
       <SectionTitle title={t('settings.security')} style={styles.gap} />
       <Card style={[styles.card, styles.rowBetween]}>
         <View style={styles.flex}>
@@ -204,6 +219,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
+  manageRow: { marginBottom: 12 },
   title: { fontWeight: '800', marginBottom: 12 },
   card: { marginBottom: 8, gap: 4 },
   gap: { marginTop: 16 },

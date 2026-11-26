@@ -74,9 +74,9 @@ export default function TransactionsScreen() {
   const catById = (id: string) => categories.find((x) => x.id === id);
   const accById = (id: string) => accounts.find((x) => x.id === id);
 
-  const chip = (label: string, active: boolean, onPress: () => void) => (
+  const chip = (key: string, label: string, active: boolean, onPress: () => void) => (
     <Pressable
-      key={label}
+      key={key}
       onPress={onPress}
       style={[
         styles.chip,
@@ -98,22 +98,22 @@ export default function TransactionsScreen() {
         style={[styles.search, { backgroundColor: c.surface, color: c.text, borderColor: c.border, borderRadius: theme.radii.md , borderCurve: 'continuous'}]}
       />
       <View style={styles.filters}>
-        {chip(t('common.all'), typeFilter === 'all', () => setTypeFilter('all'))}
-        {chip(t('common.income'), typeFilter === 'income', () => setTypeFilter(typeFilter === 'income' ? 'all' : 'income'))}
-        {chip(t('common.expense'), typeFilter === 'expense', () => setTypeFilter(typeFilter === 'expense' ? 'all' : 'expense'))}
-        {chip(t('common.all'), monthFilter === 'all', () => setMonthFilter('all'))}
-        {months.slice(0, 6).map((m) => chip(m, monthFilter === m, () => setMonthFilter(monthFilter === m ? 'all' : m)))}
+        {chip('type-all', t('common.all'), typeFilter === 'all', () => setTypeFilter('all'))}
+        {chip('type-income', t('common.income'), typeFilter === 'income', () => setTypeFilter(typeFilter === 'income' ? 'all' : 'income'))}
+        {chip('type-expense', t('common.expense'), typeFilter === 'expense', () => setTypeFilter(typeFilter === 'expense' ? 'all' : 'expense'))}
+        {chip('month-all', t('common.all'), monthFilter === 'all', () => setMonthFilter('all'))}
+        {months.slice(0, 6).map((m) => chip(`month-${m}`, m, monthFilter === m, () => setMonthFilter(monthFilter === m ? 'all' : m)))}
       </View>
       <View style={styles.filters}>
-        {chip(t('transactions.allCategories'), categoryFilter === 'all', () => setCategoryFilter('all'))}
+        {chip('cat-all', t('transactions.allCategories'), categoryFilter === 'all', () => setCategoryFilter('all'))}
         {categories.slice(0, 8).map((cat) =>
-          chip(cat.nameKey ? categoryLabel(cat) : cat.name, categoryFilter === cat.id, () =>
+          chip(`cat-${cat.id}`, cat.nameKey ? categoryLabel(cat) : cat.name, categoryFilter === cat.id, () =>
             setCategoryFilter(categoryFilter === cat.id ? 'all' : cat.id)),
         )}
       </View>
       <View style={styles.filters}>
-        {chip(t('transactions.allAccounts'), accountFilter === 'all', () => setAccountFilter('all'))}
-        {accounts.map((a) => chip(a.name, accountFilter === a.id, () => setAccountFilter(accountFilter === a.id ? 'all' : a.id)))}
+        {chip('acc-all', t('transactions.allAccounts'), accountFilter === 'all', () => setAccountFilter('all'))}
+        {accounts.map((a) => chip(`acc-${a.id}`, a.name, accountFilter === a.id, () => setAccountFilter(accountFilter === a.id ? 'all' : a.id)))}
       </View>
 
       <FlashList

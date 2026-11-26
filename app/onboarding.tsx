@@ -39,7 +39,7 @@ export default function OnboardingScreen() {
     return currencies.filter((c) => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q));
   }, [currencies, query]);
 
-  const expenseCategories = categories.filter((c) => c.type === 'expense');
+  const expenseCategories = useMemo(() => categories.filter((c) => c.type === 'expense'), [categories]);
 
   const finish = () => {
     updateSettings('currency', currency);

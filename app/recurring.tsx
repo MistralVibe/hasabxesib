@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/ui/Screen';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { DateField } from '@/components/ui/DateField';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionTitle } from '@/components/ui/SectionTitle';
@@ -118,26 +120,15 @@ function RuleForm({ existing, onClose }: { existing?: RecurringRule; onClose: ()
 
   return (
     <View style={{ gap: 12 }}>
-      <View style={styles.segmentRow}>
-        {(['expense', 'income'] as const).map((opt) => (
-          <Pressable
-            key={opt}
-            onPress={() => { setType(opt); setCategoryId(undefined); }}
-            style={[
-              styles.segment,
-              {
-                backgroundColor: type === opt ? (opt === 'income' ? c.income : c.expense) : c.surface,
-                borderColor: c.border,
-                borderRadius: theme.radii.md, borderCurve: 'continuous',
-              },
-            ]}
-          >
-            <Text style={{ color: type === opt ? '#FFFFFF' : c.text, fontWeight: '700', fontSize: theme.type.body }}>
-              {t(opt === 'income' ? 'common.income' : 'common.expense')}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <SegmentedControl
+        options={[
+          { value: 'expense', label: t('common.expense') },
+          { value: 'income', label: t('common.income') },
+        ]}
+        value={type}
+        onChange={(v) => { setType(v); setCategoryId(undefined); }}
+        getColor={(v) => (v === 'income' ? c.income : c.expense)}
+      />
 
       <TextInput
         value={amountInput}
@@ -224,16 +215,7 @@ function RuleForm({ existing, onClose }: { existing?: RecurringRule; onClose: ()
         style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.surface }]}
       />
 
-      <Text style={[styles.label, { color: c.textSecondary, fontSize: theme.type.caption }]}>{t('recurring.startDate')}</Text>
-      <TextInput
-        value={startDate}
-        onChangeText={setStartDate}
-        placeholder="yyyy-mm-dd"
-        placeholderTextColor={c.textSecondary}
-        autoCapitalize="none"
-        autoCorrect={false}
-        style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.surface }]}
-      />
+      <DateField label={t('recurring.startDate')} value={startDate} onChange={setStartDate} />
 
       {error ? <Text style={{ color: c.danger, fontSize: theme.type.body }}>{error}</Text> : null}
 

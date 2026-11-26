@@ -250,11 +250,16 @@ export default function ReportsScreen() {
     () => spendingByCategory(transactions, categories, monthKey),
     [transactions, categories, monthKey],
   );
+  const donutSlices = useMemo(
+    () => byCategory.map((row) => ({ color: row.category.color, share: row.share })),
+    [byCategory],
+  );
   const monthly = useMemo(
     () => monthlyIncomeExpense(transactions, monthKey, WINDOW_MONTHS),
     [transactions, monthKey],
   );
   const trend = useMemo(() => spendingTrend(transactions, monthKey, WINDOW_MONTHS), [transactions, monthKey]);
+  const trendValues = useMemo(() => trend.map((p) => p.total), [trend]);
   const biggest = useMemo(() => biggestTransactions(transactions, monthKey, 5), [transactions, monthKey]);
 
   const hasMonthData = byCategory.length > 0;
@@ -297,7 +302,7 @@ export default function ReportsScreen() {
         {hasMonthData ? (
           <View style={styles.donutWrap}>
             <Donut
-              slices={byCategory.map((row) => ({ color: row.category.color, share: row.share }))}
+              slices={donutSlices}
               centerLabel={money(monthExpense)}
               centerCaption={t('reports.expenseLabel')}
             />
@@ -355,7 +360,7 @@ export default function ReportsScreen() {
       <Card style={styles.card}>
         <SectionTitle title={t('reports.trend')} />
         {hasWindowData ? (
-          <TrendChart values={trend.map((p) => p.total)} color={c.accent} />
+          <TrendChart values={trendValues} color={c.accent} />
         ) : (
           <EmptyState icon="trending-down-outline" title={t('reports.noData')} />
         )}

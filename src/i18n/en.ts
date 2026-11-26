@@ -193,6 +193,9 @@ export const en = {
   settings: {
     title: 'Settings',
     appearance: 'Appearance',
+    manage: 'Manage',
+    accounts: 'Accounts & transfers',
+    recurring: 'Recurring payments',
     theme: 'Theme',
     themeSystem: 'System',
     themeLight: 'Light',
@@ -255,6 +258,7 @@ export const en = {
     thisMonth: 'This month',
     lastMonth: 'Last month',
     monthYear: '{month} {year}',
+    weekdaysShort: 'Mo Tu We Th Fr Sa Su',
   },
   categories: {
     food: 'Food & dining',

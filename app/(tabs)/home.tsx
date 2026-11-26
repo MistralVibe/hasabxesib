@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
@@ -7,7 +8,6 @@ import { Screen } from '@/components/ui/Screen';
 import { Card } from '@/components/ui/Card';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ProgressBar } from '@/components/ui/ProgressBar';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useI18n } from '@/i18n';
@@ -63,17 +63,26 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md, flexGrow: 1 }}>
       <Text style={[styles.title, { color: c.text, fontSize: theme.type.title }]}>{t('home.title')}</Text>
 
-      <Card style={styles.balanceCard}>
-        <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>{t('home.totalBalance')}</Text>
-        <Text style={{ color: c.text, fontSize: theme.type.title, fontWeight: '800' }}>{money(totalBalance())}</Text>
+      <LinearGradient
+        colors={[c.accent, c.accentDeep]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.balanceCard, theme.shadows.fab, { borderRadius: theme.radii.xl, borderCurve: 'continuous' }]}
+      >
+        <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: theme.type.caption, fontWeight: '600' }}>{t('home.totalBalance')}</Text>
+        <Text style={{ color: '#FFFFFF', fontSize: theme.type.amount, fontWeight: '800', marginTop: 4 }}>{money(totalBalance())}</Text>
         <View style={styles.monthRow}>
-          <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>
+          <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: theme.type.caption }}>
             {t('home.monthSpent')}: {money(summary.totalSpent)}
             {summary.totalBudget > 0 ? ` ${t('home.ofBudget', { amount: money(summary.totalBudget) })}` : ` · ${t('home.noBudget')}`}
           </Text>
         </View>
-        {summary.totalBudget > 0 ? <ProgressBar ratio={summary.ratio} color={statusColor} /> : null}
-      </Card>
+        {summary.totalBudget > 0 ? (
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${Math.min(summary.ratio, 1) * 100}%`, backgroundColor: statusColor === c.accent ? '#FFFFFF' : statusColor }]} />
+          </View>
+        ) : null}
+      </LinearGradient>
 
       {transactions.length === 0 ? (
         <EmptyState icon="receipt-outline" title={t('home.emptyTitle')} body={t('home.emptyBody')} />
@@ -145,7 +154,7 @@ export default function HomeScreen() {
       </ScrollView>
       <Pressable
         onPress={() => router.push({ pathname: '/transaction', params: {} })}
-        style={[styles.fab, { backgroundColor: c.accent, borderRadius: theme.radii.full, borderCurve: 'continuous' }]}
+        style={[styles.fab, theme.shadows.fab, { backgroundColor: c.accent, borderRadius: theme.radii.full, borderCurve: 'continuous' }]}
         accessibilityRole="button"
         accessibilityLabel={t('home.addTransaction')}
       >
@@ -162,6 +171,8 @@ const styles = StyleSheet.create({
   monthRow: { marginTop: 4 },
   txRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8, paddingVertical: 10 },
   flex: { flex: 1 },
+  progressTrack: { height: 6, borderRadius: 9999, borderCurve: 'continuous', backgroundColor: 'rgba(255,255,255,0.25)', marginTop: 10, overflow: 'hidden' },
+  progressFill: { height: 6, borderRadius: 9999, borderCurve: 'continuous' },
   fab: {
     position: 'absolute', right: 20, bottom: 24, width: 56, height: 56,
     alignItems: 'center', justifyContent: 'center',

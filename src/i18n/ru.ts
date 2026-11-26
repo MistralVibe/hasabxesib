@@ -195,6 +195,9 @@ export const ru: Dictionary = {
   settings: {
     title: 'Настройки',
     appearance: 'Оформление',
+    manage: 'Управление',
+    accounts: 'Счета и переводы',
+    recurring: 'Повторяющиеся платежи',
     theme: 'Тема',
     themeSystem: 'Как в системе',
     themeLight: 'Светлая',
@@ -257,6 +260,7 @@ export const ru: Dictionary = {
     thisMonth: 'Этот месяц',
     lastMonth: 'Прошлый месяц',
     monthYear: '{month} {year}',
+    weekdaysShort: 'Пн Вт Ср Чт Пт Сб Вс',
   },
   categories: {
     food: 'Еда',

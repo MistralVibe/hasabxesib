@@ -8,10 +8,12 @@ export function Card({ children, style, elevated = false }: { children: React.Re
     <View
       style={[
         styles.card,
+        theme.shadows.card,
         {
           backgroundColor: elevated ? theme.colors.surfaceElevated : theme.colors.surface,
           borderColor: theme.colors.border,
-          borderRadius: theme.radii.lg, borderCurve: 'continuous',
+          borderRadius: theme.radii.lg,
+          borderCurve: 'continuous',
         },
         style,
       ]}
