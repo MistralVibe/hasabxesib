@@ -67,7 +67,7 @@ export default function HomeScreen() {
         colors={[c.accent, c.accentDeep]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.balanceCard, theme.shadows.fab, { borderRadius: theme.radii.xl, borderCurve: 'continuous' }]}
+        style={[styles.balanceCard, theme.shadows.fab, { borderRadius: theme.radii.xl, borderCurve: 'continuous', padding: theme.spacing.lg }]}
       >
         <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: theme.type.caption, fontWeight: '600' }}>{t('home.totalBalance')}</Text>
         <Text style={{ color: '#FFFFFF', fontSize: theme.type.amount, fontWeight: '800', marginTop: 4 }}>{money(totalBalance())}</Text>
