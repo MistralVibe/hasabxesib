@@ -56,8 +56,14 @@ export default function OnboardingScreen() {
     <SafeAreaView style={[styles.root, { backgroundColor: theme.colors.background }]} edges={['top', 'bottom']}>
       {step === 'currency' ? (
         <View style={styles.step}>
+          <Text style={[styles.stepIndicator, { color: theme.colors.textSecondary, fontSize: theme.type.caption }]}>
+            {t('onboarding.step', { current: 1, total: 2 })}
+          </Text>
           <Text style={[styles.title, { color: theme.colors.text, fontSize: theme.type.title }]}>
             {t('onboarding.welcomeTitle')}
+          </Text>
+          <Text style={[styles.body, { color: theme.colors.text, fontSize: theme.type.body }]}>
+            {t('onboarding.welcomeBody')}
           </Text>
           <Text style={[styles.body, { color: theme.colors.textSecondary, fontSize: theme.type.body }]}>
             {t('onboarding.currencyBody')}
@@ -100,6 +106,9 @@ export default function OnboardingScreen() {
         </View>
       ) : (
         <View style={styles.step}>
+          <Text style={[styles.stepIndicator, { color: theme.colors.textSecondary, fontSize: theme.type.caption }]}>
+            {t('onboarding.step', { current: 2, total: 2 })}
+          </Text>
           <Text style={[styles.title, { color: theme.colors.text, fontSize: theme.type.heading }]}>
             {t('onboarding.budgetsTitle')}
           </Text>
@@ -130,9 +139,19 @@ export default function OnboardingScreen() {
               </Card>
             )}
           />
-          <View style={[styles.footer, { flexDirection: 'row', gap: 12 }]}>
-            <Button title={t('common.skip')} variant="ghost" onPress={finish} style={styles.flex} />
-            <Button title={t('onboarding.finish')} onPress={finish} style={styles.flex} />
+          <View style={styles.footer}>
+            <Button title={t('onboarding.finish')} onPress={finish} />
+            <Pressable
+              onPress={() => setStep('currency')}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.back')}
+              style={({ pressed }) => [styles.textButton, { opacity: pressed ? 0.6 : 1 }]}
+            >
+              <Text style={[styles.textButtonLabel, { color: theme.colors.accent, fontSize: theme.type.body }]}>
+                {t('common.back')}
+              </Text>
+            </Pressable>
           </View>
         </View>
       )}
@@ -144,6 +163,7 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   step: { flex: 1, padding: 16, gap: 12 },
   flex: { flex: 1 },
+  stepIndicator: { fontWeight: '700', letterSpacing: 0.6 },
   title: { fontWeight: '800' },
   body: {},
   input: { paddingHorizontal: 14, paddingVertical: 10, borderWidth: StyleSheet.hairlineWidth },
@@ -151,7 +171,9 @@ const styles = StyleSheet.create({
   rowText: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   radio: { width: 22, height: 22, borderRadius: 11, borderCurve: 'continuous', borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 12, height: 12, borderRadius: 6 , borderCurve: 'continuous'},
-  footer: { paddingTop: 8 },
+  footer: { paddingTop: 8, gap: 4 },
+  textButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  textButtonLabel: { fontWeight: '600' },
   budgetRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingVertical: 10 },
   capInput: { width: 120, paddingHorizontal: 10, paddingVertical: 8, borderWidth: StyleSheet.hairlineWidth, textAlign: 'right' },
 });
