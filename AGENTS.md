@@ -46,6 +46,14 @@ the rest is convention — follow it in every edit.
   `metro.config.js` adds `wasm` to assetExts so expo-sqlite's web build
   resolves. Verify with `CI=1 npx expo export --platform web`.
 
+## Navigation gotcha (expo-router SDK 58)
+- Never put `router` (from `useRouter()`) in a `useEffect` dependency array,
+  and never render `<Redirect>` from a gate that swaps out the navigator:
+  every navigation gives the router object a new identity (transitionMode
+  state), so the effect refires and `router.replace` loops forever
+  ("Maximum update depth exceeded"). Redirect via a ref-guarded effect with
+  primitive deps only (see `StartupGate` in `app/_layout.tsx`).
+
 ## UI conventions
 - Every `borderRadius` sets `borderCurve: 'continuous'` next to it (iOS).
 - Shadows: `boxShadow`, not `elevation`-only FAB shadows (Android).

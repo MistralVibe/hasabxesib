@@ -57,3 +57,10 @@ The first real-device run caught what CI couldn't:
 4. Web smoke test needs `wasm` in metro assetExts for expo-sqlite → added
    metro.config.js. Web stays dev-only (ADR-0001).
 5. `npx expo install --check` advisory (flash-list 2.3.3 vs 2.3.2) → aligned.
+
+6. "Maximum update depth exceeded" on fresh installs: `<Redirect>` outside the
+   navigator AND any effect depending on `router` loop, because expo-router
+   gives the router a new identity per navigation. Fixed with a ref-guarded
+   effect (`StartupGate`). Verified on a real device over adb (logcat clean).
+   Lesson: on-device logcat testing via `adb reverse` + `am start` is now part
+   of the verify step for navigation changes.

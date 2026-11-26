@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppState, StyleSheet, Text, View } from 'react-native';
-import { Stack, Redirect } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 import { I18nProvider, useI18n } from '@/i18n';
@@ -19,9 +19,33 @@ function StartupGate({ children }: { children: React.ReactNode }) {
   const [locked, setLocked] = useState(false);
   const [lockChecked, setLockChecked] = useState(false);
   const tRef = React.useRef(t);
+  const router = useRouter();
+  // expo-router's router object gets a new identity after every navigation
+  // (transitionMode state) — keep it in a ref so effects never refire because
+  // of it, and guard the redirect with a ref so it happens exactly once.
+  const routerRef = React.useRef(router);
+  useEffect(() => {
+    routerRef.current = router;
+  });
+  const onboardingRedirected = React.useRef(false);
   useEffect(() => {
     tRef.current = t;
   }, [t]);
+
+  // Onboarding redirect via a guarded effect, NOT via <Redirect>: rendering
+  // <Redirect> (or an effect depending on `router`) loops router.replace
+  // forever ("Maximum update depth exceeded") because every navigation gives
+  // the router object a new identity. The Stack below always stays mounted.
+  useEffect(() => {
+    if (!loaded) return;
+    if (!settings.onboarded && !onboardingRedirected.current) {
+      onboardingRedirected.current = true;
+      routerRef.current.replace('/onboarding');
+    }
+    if (settings.onboarded) {
+      onboardingRedirected.current = false;
+    }
+  }, [loaded, settings.onboarded]);
 
   useEffect(() => {
     // Run once on mount: load stores, post overdue recurring rules, set up alerts.
@@ -99,10 +123,6 @@ function StartupGate({ children }: { children: React.ReactNode }) {
         />
       </View>
     );
-  }
-
-  if (!settings.onboarded) {
-    return <Redirect href="/onboarding" />;
   }
 
   return <>{children}</>;
