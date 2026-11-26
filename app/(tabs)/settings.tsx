@@ -100,14 +100,22 @@ export default function SettingsScreen() {
   };
 
   const doImport = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ type: 'application/json', copyToCacheDirectory: true });
-    if (result.canceled || !result.assets?.[0]?.uri) return;
+    // copyToCacheDirectory: false keeps the SAF content:// uri on Android — Expo Go's
+    // file-permission service blocks reads of the picker's cache copy (on-device bug).
+    // base64: true lets the web picker return content inline (ignored on native).
+    const result = await DocumentPicker.getDocumentAsync({
+      type: 'application/json',
+      base64: true,
+      copyToCacheDirectory: false,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    const asset = result.assets[0];
     Alert.alert(t('settings.importConfirmTitle'), t('settings.importConfirmBody'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('common.apply'),
         onPress: async () => {
-          const r = await importJsonBackup(result.assets[0].uri);
+          const r = await importJsonBackup(asset);
           if (r.ok) {
             reload();
             Alert.alert(t('common.done'));
@@ -211,7 +219,7 @@ export default function SettingsScreen() {
       <Card style={styles.card}>
         <Text style={{ color: c.text, fontWeight: '600', fontSize: theme.type.body }}>HasabXesib</Text>
         <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>
-          {t('settings.version')} {Constants.expoConfig?.version ?? '1.0.0'}
+          {t('settings.version', { version: Constants.expoConfig?.version ?? '1.0.0' })}
         </Text>
       </Card>
     </Screen>

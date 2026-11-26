@@ -1,7 +1,9 @@
 import { File, Paths } from 'expo-file-system';
+import * as LegacyFS from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { buildTransactionsCsv, parseBackup, serializeBackup, BackupData } from '@/domain/export';
 import { listAccounts, listBudgets, listCategories, listRecurringRules, listTransactions, listTransfers, replaceAllData } from '@/db/repositories';
+import { decodeBase64 } from '@/utils/base64';
 
 // Export/import via share sheet. Parsing/validation live in the pure domain
 // module (src/domain/export.ts). expo-file-system SDK-58 API: File + Paths.
@@ -34,11 +36,24 @@ export async function exportJsonBackup(): Promise<string | null> {
   return file.uri;
 }
 
-export async function importJsonBackup(uri: string): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function importJsonBackup(asset: {
+  base64?: string | null;
+  uri?: string | null;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    const file = new File(uri);
-    if (!file.exists) return { ok: false, error: 'File not found' };
-    const json = await file.text();
+    let json: string;
+    if (asset.base64) {
+      // Web picker path: content inline, no file-system access at all.
+      json = decodeBase64(asset.base64);
+    } else if (asset.uri) {
+      // Android: keep the SAF content:// uri (copyToCacheDirectory: false) — Expo Go's
+      // FilePermissionService denies reads of the DocumentPicker cache copy, but the
+      // legacy API reads content URIs via ContentResolver under the SAF grant.
+      // iOS: file:// tmp copy from the picker, readable directly.
+      json = await LegacyFS.readAsStringAsync(asset.uri);
+    } else {
+      throw new Error('Picked file has no readable content');
+    }
     const data = parseBackup(json);
     replaceAllData(data);
     return { ok: true };
