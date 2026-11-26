@@ -34,7 +34,7 @@ function TabDock({ state, descriptors, navigateToTab, insets }: TabDockProps) {
       <View
         style={[
           styles.dock,
-          theme.shadows.card,
+          theme.shadows.dock ? { boxShadow: theme.shadows.dock } : theme.shadows.card,
           { backgroundColor: c.surface, borderColor: c.border, borderRadius: theme.radii.lg, borderCurve: 'continuous' },
         ]}
       >
@@ -61,7 +61,10 @@ function TabDock({ state, descriptors, navigateToTab, insets }: TabDockProps) {
               ]}
             >
               <Ionicons name={focused ? icons[1] : icons[0]} size={21} color={color} />
-              <Text numberOfLines={1} style={{ color, fontSize: 10, fontWeight: focused ? '700' : '600', marginTop: 3 }}>
+              <Text
+                numberOfLines={1}
+                style={[styles.itemLabel, { color, fontWeight: focused ? '700' : '600' }]}
+              >
                 {label}
               </Text>
             </Pressable>
@@ -73,18 +76,12 @@ function TabDock({ state, descriptors, navigateToTab, insets }: TabDockProps) {
 }
 
 export default function TabsLayout() {
-  const { theme } = useTheme();
   const { t } = useI18n();
-  const c = theme.colors;
 
   return (
     <Tabs
       tabBar={(props) => <TabDock {...props} />}
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: c.tabBarActive,
-        tabBarInactiveTintColor: c.tabBarInactive,
-      }}
+      screenOptions={{ headerShown: false }}
     >
       <Tabs.Screen name="home" options={{ title: t('tabs.home') }} />
       <Tabs.Screen name="transactions" options={{ title: t('tabs.transactions') }} />
@@ -101,7 +98,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 8,
     borderWidth: StyleSheet.hairlineWidth,
-    boxShadow: '0px 6px 18px rgba(15, 23, 42, 0.10)',
   },
   item: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 7 },
+  itemLabel: { fontSize: 10, marginTop: 3 },
 });

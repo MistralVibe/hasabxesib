@@ -38,7 +38,8 @@ describe('token v2 contrast', () => {
 
   it('light inactive tab label meets 3:1 non-text contrast (slate-500)', () => {
     expect(light.colors.tabBarInactive).toBe('#64748B');
-    expect(contrast(light.colors.tabBarInactive, light.colors.tabBarBackground)).toBeGreaterThanOrEqual(3);
+    // the floating dock renders on c.surface, not on the legacy tabBarBackground
+    expect(contrast(light.colors.tabBarInactive, light.colors.surface)).toBeGreaterThanOrEqual(3);
   });
 });
 

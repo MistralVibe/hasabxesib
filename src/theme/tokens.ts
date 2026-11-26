@@ -47,10 +47,19 @@ export interface ThemeTokens {
     amount: number;
   };
   shadows: {
-    card: { shadowColor: string; shadowOffset: { width: number; height: number }; shadowOpacity: number; shadowRadius: number };
-    fab: { shadowColor: string; shadowOffset: { width: number; height: number }; shadowOpacity: number; shadowRadius: number };
-    button: { shadowColor: string; shadowOffset: { width: number; height: number }; shadowOpacity: number; shadowRadius: number };
+    card: Shadow;
+    fab: Shadow;
+    button: Shadow;
+    /** Cross-platform boxShadow string (RN 0.76+) — shadow* props need elevation on Android. */
+    dock: string;
   };
+}
+
+interface Shadow {
+  shadowColor: string;
+  shadowOffset: { width: number; height: number };
+  shadowOpacity: number;
+  shadowRadius: number;
 }
 
 const lightColors: ThemeTokens['colors'] = {
@@ -125,6 +134,7 @@ export function buildTheme(scheme: ResolvedScheme): ThemeTokens {
         shadowOpacity: 0.12,
         shadowRadius: 6,
       },
+      dock: '0px 6px 18px rgba(15, 23, 42, 0.10)',
     },
   };
 }
