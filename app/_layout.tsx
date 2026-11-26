@@ -62,9 +62,13 @@ function StartupGate({ children }: { children: React.ReactNode }) {
     };
     void checkLock();
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && settings.lockEnabled) {
-        setLockChecked(false);
-        void checkLock();
+      if (state === 'active') {
+        // Daily check: re-evaluate budget alerts whenever the app comes to foreground.
+        void refreshBudgetAlerts((path, params) => tRef.current(path, params));
+        if (settings.lockEnabled) {
+          setLockChecked(false);
+          void checkLock();
+        }
       }
     });
     return () => {
@@ -107,7 +111,7 @@ function StartupGate({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <ThemeProvider>
           <I18nProvider>
@@ -131,5 +135,6 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });

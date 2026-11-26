@@ -4,7 +4,7 @@ import {
 } from '@/domain/types';
 import * as repo from '@/db/repositories';
 import { computeBalance, totalBalance, validateTransfer } from '@/domain/accounts';
-import { validateTransaction, TransactionInput } from '@/domain/transactions';
+import { validateTransaction, TransactionInput, ValidationErrorKey } from '@/domain/transactions';
 import { materializeDue, skipOccurrence as skipOccurrenceDomain } from '@/domain/recurring';
 import { startOfDayISO } from '@/domain/dates';
 
@@ -23,15 +23,16 @@ interface DataState {
   balanceOf: (accountId: string) => number;
   totalBalance: () => number;
 
-  addTransaction: (input: TransactionInput) => { ok: true; transaction: Transaction } | { ok: false; error: string };
-  updateTransaction: (id: string, input: TransactionInput) => { ok: true } | { ok: false; error: string };
+  addTransaction: (input: TransactionInput) => { ok: true; transaction: Transaction } | { ok: false; error: ValidationErrorKey };
+  updateTransaction: (id: string, input: TransactionInput) => { ok: true } | { ok: false; error: ValidationErrorKey };
   removeTransaction: (id: string) => void;
 
   addAccount: (a: Omit<Account, 'id' | 'createdAt'>) => Account;
   updateAccount: (id: string, patch: Partial<Account>) => void;
-  removeAccount: (id: string) => { ok: true } | { ok: false; error: string };
+  reassignAndDeleteAccount: (fromId: string, toId: string) => void;
+  removeAccount: (id: string) => { ok: true } | { ok: false; error: ValidationErrorKey };
 
-  addTransfer: (t: { fromAccountId: string; toAccountId: string; amount: number; note: string; date: string }) => { ok: true } | { ok: false; error: string };
+  addTransfer: (t: { fromAccountId: string; toAccountId: string; amount: number; note: string; date: string }) => { ok: true } | { ok: false; error: ValidationErrorKey };
 
   addCategory: (c: Omit<Category, 'id' | 'createdAt' | 'isPredefined'>) => Category;
 
@@ -112,6 +113,11 @@ export const useDataStore = create<DataState>((set, get) => ({
     repo.updateAccount(id, patch);
     set((s) => ({ accounts: s.accounts.map((a) => (a.id === id ? { ...a, ...patch } : a)) }));
   },
+  reassignAndDeleteAccount: (fromId, toId) => {
+    repo.reassignAndDeleteAccount(fromId, toId);
+    set((s) => ({ accounts: s.accounts.filter((a) => a.id !== fromId) }));
+    get().reload();
+  },
   removeAccount: (id) => {
     const result = repo.deleteAccountIfEmpty(id);
     if (result.ok) set((s) => ({ accounts: s.accounts.filter((a) => a.id !== id) }));
@@ -144,6 +150,7 @@ export const useDataStore = create<DataState>((set, get) => ({
   removeBudget: (id) => {
     repo.deleteBudget(id);
     set((s) => ({ budgets: s.budgets.filter((x) => x.id !== id) }));
+    void import('@/services/budgetAlerts').then((m) => m.cancelBudgetAlert(id));
   },
 
   addRecurringRule: (r) => {
@@ -168,12 +175,12 @@ export const useDataStore = create<DataState>((set, get) => ({
   },
 
   materializeRecurring: () => {
-    const { recurringRules, transactions } = get();
+    const { recurringRules } = get();
     const today = startOfDayISO(new Date());
     let posted = 0;
     for (const rule of recurringRules) {
       if (!rule.isActive) continue;
-      const result = materializeDue(rule, today, () => '');
+      const result = materializeDue(rule, today);
       if (result.postDates.length === 0) continue;
       for (const t of result.transactions) {
         repo.insertTransaction(t);
@@ -182,11 +189,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       repo.updateRecurringRule(rule.id, { nextDueDate: result.updatedRule.nextDueDate });
     }
     if (posted > 0) {
-      set({ transactions: [...repo.listTransactions()], recurringRules: repo.listRecurringRules() });
-      void transactions;
-    } else {
-      const rules = repo.listRecurringRules();
-      set({ recurringRules: rules });
+      set({ transactions: repo.listTransactions(), recurringRules: repo.listRecurringRules() });
     }
     return posted;
   },

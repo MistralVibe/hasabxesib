@@ -6,12 +6,12 @@ export function ProgressBar({ ratio, color }: { ratio: number; color?: string })
   const { theme } = useTheme();
   const clamped = Math.min(Math.max(ratio, 0), 1);
   return (
-    <View style={[styles.track, { backgroundColor: theme.colors.border, borderRadius: theme.radii.full }]}>
+    <View style={[styles.track, { backgroundColor: theme.colors.border, borderRadius: theme.radii.full , borderCurve: 'continuous'}]}>
       <View
         style={{
           width: `${clamped * 100}%`,
           backgroundColor: color ?? theme.colors.accent,
-          borderRadius: theme.radii.full,
+          borderRadius: theme.radii.full, borderCurve: 'continuous',
           ...styles.fill,
         }}
       />

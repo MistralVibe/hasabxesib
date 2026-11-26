@@ -9,6 +9,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useI18n } from '@/i18n';
+import { useCategoryLabel } from '@/hooks/useCategoryLabel';
+import { useShallow } from 'zustand/react/shallow';
 import { useDataStore } from '@/stores/useDataStore';
 import { useFormatters } from '@/hooks/useFormatters';
 import { monthKeyOf } from '@/domain/dates';
@@ -19,9 +21,12 @@ type ListItem = { kind: 'header'; date: string } | { kind: 'tx'; tx: Transaction
 export default function TransactionsScreen() {
   const { theme } = useTheme();
   const { t } = useI18n();
+  const categoryLabel = useCategoryLabel();
   const { signed } = useFormatters();
   const router = useRouter();
-  const { transactions, categories, accounts } = useDataStore();
+  const { transactions, categories, accounts } = useDataStore(
+    useShallow((s) => ({ transactions: s.transactions, categories: s.categories, accounts: s.accounts })),
+  );
 
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
@@ -75,7 +80,7 @@ export default function TransactionsScreen() {
       onPress={onPress}
       style={[
         styles.chip,
-        { borderColor: active ? c.accent : c.border, backgroundColor: active ? c.accentSoft : c.surface, borderRadius: theme.radii.full },
+        { borderColor: active ? c.accent : c.border, backgroundColor: active ? c.accentSoft : c.surface, borderRadius: theme.radii.full , borderCurve: 'continuous'},
       ]}
     >
       <Text style={{ color: active ? c.accent : c.text, fontSize: theme.type.caption, fontWeight: '600' }}>{label}</Text>
@@ -90,7 +95,7 @@ export default function TransactionsScreen() {
         onChangeText={setQuery}
         placeholder={t('transactions.searchPlaceholder')}
         placeholderTextColor={c.textSecondary}
-        style={[styles.search, { backgroundColor: c.surface, color: c.text, borderColor: c.border, borderRadius: theme.radii.md }]}
+        style={[styles.search, { backgroundColor: c.surface, color: c.text, borderColor: c.border, borderRadius: theme.radii.md , borderCurve: 'continuous'}]}
       />
       <View style={styles.filters}>
         {chip(t('common.all'), typeFilter === 'all', () => setTypeFilter('all'))}
@@ -102,7 +107,7 @@ export default function TransactionsScreen() {
       <View style={styles.filters}>
         {chip(t('transactions.allCategories'), categoryFilter === 'all', () => setCategoryFilter('all'))}
         {categories.slice(0, 8).map((cat) =>
-          chip(cat.nameKey ? t(`categories.${cat.nameKey.split('.')[1]}` as never) : cat.name, categoryFilter === cat.id, () =>
+          chip(cat.nameKey ? categoryLabel(cat) : cat.name, categoryFilter === cat.id, () =>
             setCategoryFilter(categoryFilter === cat.id ? 'all' : cat.id)),
         )}
       </View>
@@ -113,6 +118,7 @@ export default function TransactionsScreen() {
 
       <FlashList
         data={listData}
+        getItemType={(item: ListItem) => item.kind}
         keyExtractor={(item: ListItem) => (item.kind === 'header' ? `h-${item.date}` : item.tx.id)}
         renderItem={({ item }: { item: ListItem }) => {
           if (item.kind === 'header') {
@@ -127,7 +133,7 @@ export default function TransactionsScreen() {
                 {cat ? <CategoryIcon icon={cat.icon} color={cat.color} /> : null}
                 <View style={styles.flex}>
                   <Text style={{ color: c.text, fontSize: theme.type.body, fontWeight: '600' }} numberOfLines={1}>
-                    {cat?.nameKey ? t(`categories.${cat.nameKey.split('.')[1]}` as never) : cat?.name ?? ''}
+                    {cat?.nameKey ? categoryLabel(cat) : cat?.name ?? ''}
                     {tx.note ? ` · ${tx.note}` : ''}
                   </Text>
                   <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>{acc?.name ?? ''}</Text>
@@ -150,7 +156,7 @@ export default function TransactionsScreen() {
 
       <Pressable
         onPress={() => router.push({ pathname: '/transaction', params: {} })}
-        style={[styles.fab, { backgroundColor: c.accent, borderRadius: theme.radii.full }]}
+        style={[styles.fab, { backgroundColor: c.accent, borderRadius: theme.radii.full , borderCurve: 'continuous'}]}
         accessibilityRole="button"
       >
         <Ionicons name="add" size={28} color={c.accentText} />
@@ -170,7 +176,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   fab: {
     position: 'absolute', right: 20, bottom: 20, width: 56, height: 56,
-    alignItems: 'center', justifyContent: 'center', elevation: 4,
-    shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 6, shadowOffset: { width: 0, height: 3 },
+    alignItems: 'center', justifyContent: 'center',
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
   },
 });

@@ -1,4 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
@@ -8,9 +10,10 @@ import { SectionTitle } from '@/components/ui/SectionTitle';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
-import { Button } from '@/components/ui/Button';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useI18n } from '@/i18n';
+import { useCategoryLabel } from '@/hooks/useCategoryLabel';
+import { useShallow } from 'zustand/react/shallow';
 import { useDataStore } from '@/stores/useDataStore';
 import { useFormatters } from '@/hooks/useFormatters';
 import { monthBudgetSummary } from '@/domain/budgets';
@@ -21,9 +24,18 @@ import { Transaction } from '@/domain/types';
 export default function HomeScreen() {
   const { theme } = useTheme();
   const { t } = useI18n();
+  const categoryLabel = useCategoryLabel();
   const { money, signed } = useFormatters();
   const router = useRouter();
-  const { accounts, transactions, budgets, recurringRules, totalBalance, loaded } = useDataStore();
+  const { accounts, transactions, budgets, recurringRules, totalBalance } = useDataStore(
+    useShallow((s) => ({
+      accounts: s.accounts,
+      transactions: s.transactions,
+      budgets: s.budgets,
+      recurringRules: s.recurringRules,
+      totalBalance: s.totalBalance,
+    })),
+  );
   const categories = useDataStore((s) => s.categories);
 
   const monthKey = monthKeyOf(startOfDayISO(new Date()));
@@ -37,9 +49,8 @@ export default function HomeScreen() {
   for (const rule of recurringRules) {
     if (!rule.isActive) continue;
     const next = upcomingOccurrences(rule, today, 1)[0];
-    if (next) {
+    if (next && (!nextRecurring || next < nextRecurring.next)) {
       nextRecurring = { rule, next, category: categories.find((c) => c.id === rule.categoryId) };
-      break;
     }
   }
 
@@ -48,9 +59,15 @@ export default function HomeScreen() {
 
   const c = theme.colors;
   const statusColor = summary.status === 'exceeded' ? c.danger : summary.status === 'warning' ? c.warning : c.accent;
+  const fade = useSharedValue(0);
+  useEffect(() => {
+    fade.value = withTiming(1, { duration: 250 });
+  }, [fade]);
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: fade.value }));
 
   return (
-    <Screen>
+    <Screen scroll={false} style={styles.screen}>
+      <Animated.ScrollView contentContainerStyle={{ padding: theme.spacing.md, flexGrow: 1 }} style={fadeStyle}>
       <Text style={[styles.title, { color: c.text, fontSize: theme.type.title }]}>{t('home.title')}</Text>
 
       <Card style={styles.balanceCard}>
@@ -87,7 +104,7 @@ export default function HomeScreen() {
                     {cat ? <CategoryIcon icon={cat.icon} color={cat.color} /> : null}
                     <View style={styles.flex}>
                       <Text style={{ color: c.text, fontSize: theme.type.body, fontWeight: '600' }}>
-                        {cat?.nameKey ? t(`categories.${cat.nameKey.split('.')[1]}` as never) : cat?.name ?? ''}
+                        {cat?.nameKey ? categoryLabel(cat) : cat?.name ?? ''}
                       </Text>
                       <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>
                         {acc?.name ?? ''} · {item.date}
@@ -132,21 +149,29 @@ export default function HomeScreen() {
         </>
       )}
 
-      <Button
-        title={t('home.addTransaction')}
+      </Animated.ScrollView>
+      <Pressable
         onPress={() => router.push({ pathname: '/transaction', params: {} })}
-        style={styles.fab}
-      />
-      {!loaded ? null : null}
+        style={[styles.fab, { backgroundColor: c.accent, borderRadius: theme.radii.full, borderCurve: 'continuous' }]}
+        accessibilityRole="button"
+        accessibilityLabel={t('home.addTransaction')}
+      >
+        <Ionicons name="add" size={28} color={c.accentText} />
+      </Pressable>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { position: 'relative' },
   title: { fontWeight: '800', marginBottom: 12 },
   balanceCard: { marginBottom: 20, gap: 6 },
   monthRow: { marginTop: 4 },
   txRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8, paddingVertical: 10 },
   flex: { flex: 1 },
-  fab: { marginTop: 12 },
+  fab: {
+    position: 'absolute', right: 20, bottom: 24, width: 56, height: 56,
+    alignItems: 'center', justifyContent: 'center',
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
+  },
 });

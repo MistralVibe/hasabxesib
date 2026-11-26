@@ -27,7 +27,7 @@ export function Button({
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: bg, borderRadius: theme.radii.md, opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
+        { backgroundColor: bg, borderRadius: theme.radii.md, borderCurve: 'continuous', opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
         style,
       ]}
       accessibilityRole="button"

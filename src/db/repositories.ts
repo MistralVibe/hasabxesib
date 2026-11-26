@@ -1,4 +1,5 @@
 import type { SQLiteBindValue } from 'expo-sqlite';
+import { getLocales } from 'expo-localization';
 import { getDb } from './database';
 import { PREDEFINED_CATEGORIES } from './seed';
 import {
@@ -100,14 +101,26 @@ export function updateAccount(id: string, patch: Partial<Omit<Account, 'id' | 'c
   }
   if (sets.length) db.runSync(`UPDATE accounts SET ${sets.join(', ')} WHERE id = ?`, [...vals, id]);
 }
-export function deleteAccountIfEmpty(id: string): { ok: true } | { ok: false; error: string } {
+export function deleteAccountIfEmpty(id: string): { ok: true } | { ok: false; error: 'accountHasActivity' } {
   const db = getDb();
   const txCount = db.getFirstSync<{ c: number }>('SELECT COUNT(*) AS c FROM transactions WHERE account_id = ?', [id])?.c ?? 0;
   const trCount = db.getFirstSync<{ c: number }>('SELECT COUNT(*) AS c FROM transfers WHERE from_account_id = ? OR to_account_id = ?', [id, id])?.c ?? 0;
   const ruleCount = db.getFirstSync<{ c: number }>('SELECT COUNT(*) AS c FROM recurring_rules WHERE account_id = ?', [id])?.c ?? 0;
-  if (txCount + trCount + ruleCount > 0) return { ok: false, error: 'Account has transactions, transfers or recurring rules' };
+  if (txCount + trCount + ruleCount > 0) return { ok: false, error: 'accountHasActivity' };
   db.runSync('DELETE FROM accounts WHERE id = ?', [id]);
   return { ok: true };
+}
+
+/** Move all activity of an account to another account, then delete it. */
+export function reassignAndDeleteAccount(fromId: string, toId: string): void {
+  const db = getDb();
+  db.withTransactionSync(() => {
+    db.runSync('UPDATE transactions SET account_id = ? WHERE account_id = ?', [toId, fromId]);
+    db.runSync('UPDATE transfers SET from_account_id = ? WHERE from_account_id = ?', [toId, fromId]);
+    db.runSync('UPDATE transfers SET to_account_id = ? WHERE to_account_id = ?', [toId, fromId]);
+    db.runSync('UPDATE recurring_rules SET account_id = ? WHERE account_id = ?', [toId, fromId]);
+    db.runSync('DELETE FROM accounts WHERE id = ?', [fromId]);
+  });
 }
 
 // ---- categories ----
@@ -244,6 +257,7 @@ export const DEFAULT_SETTINGS: Settings = {
   lockEnabled: false,
   reminderEnabled: false,
   reminderTime: '20:00',
+  notifiedAlerts: '{}',
 };
 
 export function getSettings(): Settings {
@@ -254,10 +268,11 @@ export function getSettings(): Settings {
     onboarded: map.get('onboarded') === 'true',
     currency: map.get('currency') ?? DEFAULT_SETTINGS.currency,
     theme: (map.get('theme') as Settings['theme']) ?? DEFAULT_SETTINGS.theme,
-    language: (map.get('language') as Settings['language']) ?? DEFAULT_SETTINGS.language,
+    language: (map.get('language') as Settings['language']) ?? (getLocales()[0]?.languageCode === 'ru' ? 'ru' : 'en'),
     lockEnabled: map.get('lockEnabled') === 'true',
     reminderEnabled: map.get('reminderEnabled') === 'true',
     reminderTime: map.get('reminderTime') ?? DEFAULT_SETTINGS.reminderTime,
+    notifiedAlerts: map.get('notifiedAlerts') ?? DEFAULT_SETTINGS.notifiedAlerts,
   };
 }
 

@@ -1,4 +1,5 @@
 import { Account, Budget, Category, RecurringRule, Transaction, Transfer } from './types';
+import { currencyExponent, fromMinor } from './money';
 
 export interface BackupData {
   version: 1;
@@ -34,7 +35,7 @@ export function buildTransactionsCsv(
     .slice()
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((t) => {
-      const decimal = (t.amount / 100).toFixed(2);
+      const decimal = fromMinor(t.amount, currency).toFixed(currencyExponent(currency));
       return [
         t.date, t.type, decimal, currency,
         csvEscape(categoryName.get(t.categoryId) ?? t.categoryId),
@@ -74,7 +75,7 @@ function parseAccount(r: unknown): Account {
     id: requireString(r.id, 'account.id'),
     name: requireString(r.name, 'account.name'),
     type: r.type === 'cash' || r.type === 'card' || r.type === 'bank' ? r.type : (() => { throw new BackupError('Invalid backup: account.type'); })(),
-    icon: typeof r.icon === 'string' ? r.icon : 'wallet',
+    icon: typeof r.icon === 'string' ? r.icon : 'cash',
     color: typeof r.color === 'string' ? r.color : '#888888',
     openingBalance: typeof r.openingBalance === 'number' && Number.isInteger(r.openingBalance) ? r.openingBalance : 0,
     createdAt: typeof r.createdAt === 'string' ? r.createdAt : new Date().toISOString(),

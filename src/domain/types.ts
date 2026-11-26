@@ -100,4 +100,6 @@ export interface Settings {
   reminderEnabled: boolean;
   /** "HH:MM" 24h local time */
   reminderTime: string;
+  /** JSON map of already-fired budget alert keys ("month:budgetId:status") */
+  notifiedAlerts: string;
 }

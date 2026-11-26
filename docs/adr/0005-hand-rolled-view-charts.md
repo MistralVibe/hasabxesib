@@ -1,0 +1,3 @@
+# Reports charts are hand-built from Views, not victory-native
+
+The spec originally said victory-native (react-native-svg based). victory-native v43 requires react-native-skia as a peer, which is a large native dependency that failed to install reliably on this project's flaky network (corrupted tarballs). Rather than ship a fragile chart dependency for three chart types, the Reports screen renders the donut (tick ring), monthly income/expense bars and the spending trend line as plain scaled/rotated Views, themed from the design tokens. If victory-native/skia becomes reliably installable later, swapping the three chart components for PieChart/BarChart/LineChart is a localized change behind the same data (reports domain), and this ADR explains why the deviation exists.

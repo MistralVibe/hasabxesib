@@ -51,6 +51,20 @@ export function monthBounds(key: string): { start: string; end: string } {
   return { start: `${key}-01`, end: `${key}-${pad(daysInMonth(y, m))}` };
 }
 
+/** Advance a date by one step of the frequency (shared by recurring rules). */
+export function advanceDate(iso: string, frequency: RecurringFrequency): string {
+  switch (frequency) {
+    case 'daily':
+      return addDays(iso, 1);
+    case 'weekly':
+      return addDays(iso, 7);
+    case 'monthly':
+      return addMonths(iso, 1);
+    case 'yearly':
+      return addYears(iso, 1);
+  }
+}
+
 /**
  * The first occurrence strictly after `fromISO` for a rule that started at `startISO`.
  * Returns null when the next occurrence is not after `fromISO`.
@@ -60,20 +74,7 @@ export function nextDueAfter(startISO: string, frequency: RecurringFrequency, fr
   // Advance in bounded steps until we pass fromISO (max 5000 iterations guards runaway loops).
   for (let i = 0; i < 5000; i++) {
     if (candidate > fromISO) return candidate;
-    switch (frequency) {
-      case 'daily':
-        candidate = addDays(candidate, 1);
-        break;
-      case 'weekly':
-        candidate = addDays(candidate, 7);
-        break;
-      case 'monthly':
-        candidate = addMonths(candidate, 1);
-        break;
-      case 'yearly':
-        candidate = addYears(candidate, 1);
-        break;
-    }
+    candidate = advanceDate(candidate, frequency);
   }
   return null;
 }

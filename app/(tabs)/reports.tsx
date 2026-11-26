@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useI18n } from '@/i18n';
+import { useShallow } from 'zustand/react/shallow';
 import { useDataStore } from '@/stores/useDataStore';
 import { useFormatters } from '@/hooks/useFormatters';
 import { biggestTransactions, monthlyIncomeExpense, spendingByCategory, spendingTrend } from '@/domain/reports';
@@ -20,15 +21,26 @@ const DONUT_THICKNESS = 16;
 const DONUT_TICKS = 132;
 
 /** "March 2025" in the active language, built from the month key. */
+const monthFmtCache = new Map<string, Intl.DateTimeFormat>();
+function monthFormatter(locale: string, month: 'long' | 'short'): Intl.DateTimeFormat {
+  const key = `${locale}:${month}`;
+  let f = monthFmtCache.get(key);
+  if (!f) {
+    f = new Intl.DateTimeFormat(locale, { month });
+    monthFmtCache.set(key, f);
+  }
+  return f;
+}
+
 function monthLabel(key: string, locale: string): string {
   const [year, month] = key.split('-').map(Number);
-  const name = new Date(year, month - 1, 1).toLocaleDateString(locale, { month: 'long' });
+  const name = monthFormatter(locale, 'long').format(new Date(year, month - 1, 1));
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
 function shortMonth(key: string, locale: string): string {
   const [year, month] = key.split('-').map(Number);
-  return new Date(year, month - 1, 1).toLocaleDateString(locale, { month: 'short' });
+  return monthFormatter(locale, 'short').format(new Date(year, month - 1, 1));
 }
 
 function categoryLabel(t: ReturnType<typeof useI18n>['t'], category: Category): string {
@@ -91,7 +103,7 @@ function Donut({
             {
               width: DONUT_THICKNESS,
               height: DONUT_THICKNESS,
-              borderRadius: DONUT_THICKNESS / 2,
+              borderRadius: DONUT_THICKNESS / 2, borderCurve: 'continuous',
               backgroundColor: dot.color,
               left: dot.x,
               top: dot.y,
@@ -225,7 +237,9 @@ export default function ReportsScreen() {
   const { theme } = useTheme();
   const { t, language } = useI18n();
   const { money, signed } = useFormatters();
-  const { transactions, categories } = useDataStore();
+  const { transactions, categories } = useDataStore(
+    useShallow((s) => ({ transactions: s.transactions, categories: s.categories })),
+  );
 
   const thisMonth = monthKeyOf(startOfDayISO(new Date()));
   const [monthKey, setMonthKey] = useState(thisMonth);
@@ -390,14 +404,14 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   legend: { flexDirection: 'row', gap: 16, marginTop: 6, marginBottom: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendDot: { width: 10, height: 10, borderRadius: 5 },
+  legendDot: { width: 10, height: 10, borderRadius: 5 , borderCurve: 'continuous'},
   barArea: { flexDirection: 'row', alignItems: 'flex-end', gap: 2 },
   barGroup: { flex: 1, alignItems: 'center' },
   barPair: { flexDirection: 'row', alignItems: 'flex-end', gap: 2 },
-  bar: { width: 5, borderRadius: 2 },
+  bar: { width: 5, borderRadius: 2 , borderCurve: 'continuous'},
   axis: { height: StyleSheet.hairlineWidth, marginTop: 4 },
   axisRow: { flexDirection: 'row', marginTop: 4 },
   axisLabel: { flex: 1, textAlign: 'center', fontSize: 9 },
   lineSegment: { position: 'absolute' },
-  lineDot: { position: 'absolute', width: 6, height: 6, borderRadius: 3, borderWidth: 1 },
+  lineDot: { position: 'absolute', width: 6, height: 6, borderRadius: 3, borderCurve: 'continuous', borderWidth: 1 },
 });

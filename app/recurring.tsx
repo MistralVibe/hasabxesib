@@ -12,10 +12,11 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useI18n } from '@/i18n';
+import { useShallow } from 'zustand/react/shallow';
 import { useDataStore } from '@/stores/useDataStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useFormatters } from '@/hooks/useFormatters';
-import { parseAmountInput, toMinor } from '@/domain/money';
+import { parseAmountInput, toMinor, minorToInputString } from '@/domain/money';
 import { nextDueAfter, parseISODate, startOfDayISO, toISODate } from '@/domain/dates';
 import { upcomingOccurrences } from '@/domain/recurring';
 import { RecurringFrequency, RecurringRule, TransactionType } from '@/domain/types';
@@ -46,10 +47,15 @@ function RuleForm({ existing, onClose }: { existing?: RecurringRule; onClose: ()
   const { theme } = useTheme();
   const { t } = useI18n();
   const { money } = useFormatters();
-  const { accounts, categories, addRecurringRule, updateRecurringRule, removeRecurringRule } = useDataStore();
+  const { accounts, categories, addRecurringRule, updateRecurringRule, removeRecurringRule } = useDataStore(
+    useShallow((s) => ({
+      accounts: s.accounts, categories: s.categories, addRecurringRule: s.addRecurringRule,
+      updateRecurringRule: s.updateRecurringRule, removeRecurringRule: s.removeRecurringRule,
+    })),
+  );
 
   const [type, setType] = useState<TransactionType>(existing?.type ?? 'expense');
-  const [amountInput, setAmountInput] = useState(existing ? (existing.amount / 100).toFixed(2) : '');
+  const [amountInput, setAmountInput] = useState(existing ? minorToInputString(existing.amount, useSettingsStore.getState().settings.currency) : '');
   const [categoryId, setCategoryId] = useState<string | undefined>(existing?.categoryId);
   const [accountId, setAccountId] = useState<string | undefined>(existing?.accountId ?? accounts[0]?.id);
   const [note, setNote] = useState(existing?.note ?? '');
@@ -122,7 +128,7 @@ function RuleForm({ existing, onClose }: { existing?: RecurringRule; onClose: ()
               {
                 backgroundColor: type === opt ? (opt === 'income' ? c.income : c.expense) : c.surface,
                 borderColor: c.border,
-                borderRadius: theme.radii.md,
+                borderRadius: theme.radii.md, borderCurve: 'continuous',
               },
             ]}
           >
@@ -139,11 +145,11 @@ function RuleForm({ existing, onClose }: { existing?: RecurringRule; onClose: ()
         placeholder={t('common.amount')}
         placeholderTextColor={c.textSecondary}
         keyboardType="decimal-pad"
-        style={[styles.bigInput, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, fontSize: theme.type.title }]}
+        style={[styles.bigInput, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', fontSize: theme.type.title }]}
       />
       {amount !== null ? (
         <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>
-          ≈ {money(Math.round(amount * 100))}
+          ≈ {money(toMinor(amountInput, useSettingsStore.getState().settings.currency) ?? 0)}
         </Text>
       ) : null}
 
@@ -158,7 +164,7 @@ function RuleForm({ existing, onClose }: { existing?: RecurringRule; onClose: ()
               {
                 borderColor: categoryId === cat.id ? cat.color : c.border,
                 backgroundColor: categoryId === cat.id ? `${cat.color}22` : c.surface,
-                borderRadius: theme.radii.full,
+                borderRadius: theme.radii.full, borderCurve: 'continuous',
               },
             ]}
           >
@@ -181,7 +187,7 @@ function RuleForm({ existing, onClose }: { existing?: RecurringRule; onClose: ()
               {
                 borderColor: accountId === a.id ? c.accent : c.border,
                 backgroundColor: accountId === a.id ? c.accentSoft : c.surface,
-                borderRadius: theme.radii.full,
+                borderRadius: theme.radii.full, borderCurve: 'continuous',
               },
             ]}
           >
@@ -201,7 +207,7 @@ function RuleForm({ existing, onClose }: { existing?: RecurringRule; onClose: ()
               {
                 borderColor: frequency === f ? c.accent : c.border,
                 backgroundColor: frequency === f ? c.accentSoft : c.surface,
-                borderRadius: theme.radii.full,
+                borderRadius: theme.radii.full, borderCurve: 'continuous',
               },
             ]}
           >
@@ -215,7 +221,7 @@ function RuleForm({ existing, onClose }: { existing?: RecurringRule; onClose: ()
         onChangeText={setNote}
         placeholder={t('common.note')}
         placeholderTextColor={c.textSecondary}
-        style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, backgroundColor: c.surface }]}
+        style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.surface }]}
       />
 
       <Text style={[styles.label, { color: c.textSecondary, fontSize: theme.type.caption }]}>{t('recurring.startDate')}</Text>
@@ -226,7 +232,7 @@ function RuleForm({ existing, onClose }: { existing?: RecurringRule; onClose: ()
         placeholderTextColor={c.textSecondary}
         autoCapitalize="none"
         autoCorrect={false}
-        style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, backgroundColor: c.surface }]}
+        style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.surface }]}
       />
 
       {error ? <Text style={{ color: c.danger, fontSize: theme.type.body }}>{error}</Text> : null}
@@ -243,9 +249,12 @@ export default function RecurringScreen() {
   const { theme } = useTheme();
   const { t } = useI18n();
   const { signed } = useFormatters();
-  const {
-    recurringRules, categories, accounts, skipRecurringOccurrence,
-  } = useDataStore();
+  const { recurringRules, categories, accounts, skipRecurringOccurrence } = useDataStore(
+    useShallow((s) => ({
+      recurringRules: s.recurringRules, categories: s.categories, accounts: s.accounts,
+      skipRecurringOccurrence: s.skipRecurringOccurrence,
+    })),
+  );
 
   const [formMode, setFormMode] = useState<{ open: boolean; id?: string }>({ open: false });
 
@@ -267,7 +276,7 @@ export default function RecurringScreen() {
         <Pressable
           onPress={() => (formMode.open ? closeForm() : openForm())}
           accessibilityRole="button"
-          style={[styles.headerAction, { borderColor: c.border, borderRadius: theme.radii.full, backgroundColor: c.surface }]}
+          style={[styles.headerAction, { borderColor: c.border, borderRadius: theme.radii.full, borderCurve: 'continuous', backgroundColor: c.surface }]}
         >
           <Ionicons name={formMode.open ? 'close' : 'add'} size={20} color={c.accent} />
         </Pressable>

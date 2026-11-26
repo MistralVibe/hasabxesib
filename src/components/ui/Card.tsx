@@ -11,7 +11,7 @@ export function Card({ children, style, elevated = false }: { children: React.Re
         {
           backgroundColor: elevated ? theme.colors.surfaceElevated : theme.colors.surface,
           borderColor: theme.colors.border,
-          borderRadius: theme.radii.lg,
+          borderRadius: theme.radii.lg, borderCurve: 'continuous',
         },
         style,
       ]}

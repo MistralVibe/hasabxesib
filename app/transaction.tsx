@@ -6,10 +6,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useI18n } from '@/i18n';
+import { useCategoryLabel } from '@/hooks/useCategoryLabel';
 import { useDataStore } from '@/stores/useDataStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useFormatters } from '@/hooks/useFormatters';
-import { parseAmountInput, toMinor } from '@/domain/money';
+import { parseAmountInput, toMinor, minorToInputString } from '@/domain/money';
 import { startOfDayISO } from '@/domain/dates';
 import { TransactionType } from '@/domain/types';
 import { Button } from '@/components/ui/Button';
@@ -20,13 +22,23 @@ export default function TransactionModal() {
   const router = useRouter();
   const { theme } = useTheme();
   const { t } = useI18n();
+  const categoryLabel = useCategoryLabel();
   const { money } = useFormatters();
-  const { accounts, categories, transactions, addTransaction, updateTransaction, removeTransaction } = useDataStore();
+  const { accounts, categories, transactions, addTransaction, updateTransaction, removeTransaction } = useDataStore(
+    useShallow((s) => ({
+      accounts: s.accounts,
+      categories: s.categories,
+      transactions: s.transactions,
+      addTransaction: s.addTransaction,
+      updateTransaction: s.updateTransaction,
+      removeTransaction: s.removeTransaction,
+    })),
+  );
 
   const existing = id ? transactions.find((tx) => tx.id === id) : undefined;
 
   const [type, setType] = useState<TransactionType>(existing?.type ?? 'expense');
-  const [amountInput, setAmountInput] = useState(existing ? (existing.amount / 100).toFixed(2) : '');
+  const [amountInput, setAmountInput] = useState(existing ? minorToInputString(existing.amount, useSettingsStore.getState().settings.currency) : '');
   const [categoryId, setCategoryId] = useState<string | undefined>(existing?.categoryId);
   const [accountId, setAccountId] = useState<string | undefined>(existing?.accountId ?? accounts[0]?.id);
   const [note, setNote] = useState(existing?.note ?? '');
@@ -46,7 +58,7 @@ export default function TransactionModal() {
     if (minorUnits === null || minorUnits <= 0) { setError(t('errors.invalidAmount')); return; }
     const input = { accountId, categoryId, type, amount: minorUnits, note, date };
     const result = existing ? updateTransaction(existing.id, input) : addTransaction(input);
-    if (!result.ok) { setError(result.error); return; }
+    if (!result.ok) { setError(t(`errors.${result.error}` as never)); return; }
     router.back();
   };
 
@@ -82,7 +94,7 @@ export default function TransactionModal() {
                 {
                   backgroundColor: type === opt ? (opt === 'income' ? c.income : c.expense) : c.surface,
                   borderColor: c.border,
-                  borderRadius: theme.radii.md,
+                  borderRadius: theme.radii.md, borderCurve: 'continuous',
                 },
               ]}
             >
@@ -100,11 +112,11 @@ export default function TransactionModal() {
           placeholderTextColor={c.textSecondary}
           keyboardType="decimal-pad"
           autoFocus={!existing}
-          style={[styles.bigInput, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, fontSize: theme.type.title }]}
+          style={[styles.bigInput, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', fontSize: theme.type.title }]}
         />
         {amount !== null ? (
           <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>
-            ≈ {money(Math.round(amount * 100))}
+            ≈ {money(toMinor(amountInput, useSettingsStore.getState().settings.currency) ?? 0)}
           </Text>
         ) : null}
 
@@ -116,12 +128,12 @@ export default function TransactionModal() {
               onPress={() => setCategoryId(cat.id)}
               style={[
                 styles.chip,
-                { borderColor: categoryId === cat.id ? cat.color : c.border, backgroundColor: categoryId === cat.id ? `${cat.color}22` : c.surface, borderRadius: theme.radii.full },
+                { borderColor: categoryId === cat.id ? cat.color : c.border, backgroundColor: categoryId === cat.id ? `${cat.color}22` : c.surface, borderRadius: theme.radii.full , borderCurve: 'continuous'},
               ]}
             >
               <CategoryIcon icon={cat.icon} color={cat.color} size={16} />
               <Text style={{ color: c.text, fontSize: theme.type.caption, marginLeft: 6 }}>
-                {cat.nameKey ? t(`categories.${cat.nameKey.split('.')[1]}` as never) : cat.name}
+                {cat.nameKey ? categoryLabel(cat) : cat.name}
               </Text>
             </Pressable>
           ))}
@@ -135,7 +147,7 @@ export default function TransactionModal() {
               onPress={() => setAccountId(a.id)}
               style={[
                 styles.chip,
-                { borderColor: accountId === a.id ? c.accent : c.border, backgroundColor: accountId === a.id ? c.accentSoft : c.surface, borderRadius: theme.radii.full },
+                { borderColor: accountId === a.id ? c.accent : c.border, backgroundColor: accountId === a.id ? c.accentSoft : c.surface, borderRadius: theme.radii.full , borderCurve: 'continuous'},
               ]}
             >
               <Text style={{ color: c.text, fontSize: theme.type.caption }}>{a.name}</Text>
@@ -148,7 +160,7 @@ export default function TransactionModal() {
           onChangeText={setNote}
           placeholder={t('transactions.notePlaceholder')}
           placeholderTextColor={c.textSecondary}
-          style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, backgroundColor: c.surface }]}
+          style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.surface }]}
         />
         <TextInput
           value={date}
@@ -156,7 +168,7 @@ export default function TransactionModal() {
           placeholder="yyyy-mm-dd"
           placeholderTextColor={c.textSecondary}
           autoCapitalize="none"
-          style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, backgroundColor: c.surface }]}
+          style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.surface }]}
         />
 
         {error ? <Text style={{ color: c.danger, fontSize: theme.type.body }}>{error}</Text> : null}

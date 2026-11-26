@@ -10,23 +10,29 @@ import { SectionTitle } from '@/components/ui/SectionTitle';
 import { Button } from '@/components/ui/Button';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useI18n } from '@/i18n';
+import { useCategoryLabel } from '@/hooks/useCategoryLabel';
+import { useShallow } from 'zustand/react/shallow';
 import { useDataStore } from '@/stores/useDataStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useFormatters } from '@/hooks/useFormatters';
-import { allBudgetsProgress, monthBudgetSummary, spentForCategory, BudgetStatus } from '@/domain/budgets';
+import { allBudgetsProgress, monthBudgetSummary, spentForCategory } from '@/domain/budgets';
+import { budgetStatusColor, budgetStatusLabel } from '@/components/ui/budgetStatus';
 import { startOfDayISO, monthKeyOf } from '@/domain/dates';
-import { toMinor } from '@/domain/money';
+import { toMinor, minorToInputString } from '@/domain/money';
 import { Category } from '@/domain/types';
-
-const statusColor = (status: BudgetStatus, c: { ok: string; warning: string; danger: string }) =>
-  status === 'exceeded' ? c.danger : status === 'warning' ? c.warning : c.ok;
 
 export default function BudgetsScreen() {
   const { theme } = useTheme();
   const { t } = useI18n();
+  const categoryLabel = useCategoryLabel();
   const { money } = useFormatters();
   const currency = useSettingsStore((s) => s.settings.currency);
-  const { categories, transactions, budgets, upsertBudget, removeBudget } = useDataStore();
+  const { categories, transactions, budgets, upsertBudget, removeBudget } = useDataStore(
+    useShallow((s) => ({
+      categories: s.categories, transactions: s.transactions, budgets: s.budgets,
+      upsertBudget: s.upsertBudget, removeBudget: s.removeBudget,
+    })),
+  );
 
   const c = theme.colors;
   const monthKey = monthKeyOf(startOfDayISO(new Date()));
@@ -51,7 +57,7 @@ export default function BudgetsScreen() {
 
   const openEdit = (cat: Category, currentCap?: number) => {
     setEditing(cat);
-    setCapInput(currentCap ? String(currentCap / 100) : '');
+    setCapInput(currentCap ? minorToInputString(currentCap, useSettingsStore.getState().settings.currency) : '');
   };
 
   const saveBudget = () => {
@@ -74,8 +80,6 @@ export default function BudgetsScreen() {
     ]);
   };
 
-  const statusLabel = (s: BudgetStatus) =>
-    s === 'exceeded' ? t('budgets.statusExceeded') : s === 'warning' ? t('budgets.statusWarning') : t('budgets.statusOk');
 
   return (
     <Screen>
@@ -88,11 +92,11 @@ export default function BudgetsScreen() {
             <Text style={{ color: c.text, fontSize: theme.type.heading, fontWeight: '800' }}>
               {money(summary.totalSpent)} / {money(summary.totalBudget)}
             </Text>
-            <Text style={{ color: statusColor(summary.status, { ok: c.income, warning: c.warning, danger: c.danger }), fontWeight: '700', fontSize: theme.type.caption }}>
+            <Text style={{ color: budgetStatusColor(summary.status, { ok: c.income, warning: c.warning, danger: c.danger }), fontWeight: '700', fontSize: theme.type.caption }}>
               {Math.round(summary.ratio * 100)}%
             </Text>
           </View>
-          <ProgressBar ratio={summary.ratio} color={statusColor(summary.status, { ok: c.accent, warning: c.warning, danger: c.danger })} />
+          <ProgressBar ratio={summary.ratio} color={budgetStatusColor(summary.status, { ok: c.accent, warning: c.warning, danger: c.danger })} />
         </Card>
       ) : null}
 
@@ -114,13 +118,13 @@ export default function BudgetsScreen() {
                   <View style={styles.flex}>
                     <View style={styles.summaryRow}>
                       <Text style={{ color: c.text, fontWeight: '600', fontSize: theme.type.body }}>
-                        {cat.nameKey ? t(`categories.${cat.nameKey.split('.')[1]}` as never) : cat.name}
+                        {cat.nameKey ? categoryLabel(cat) : cat.name}
                       </Text>
-                      <Text style={{ color: statusColor(p.status, { ok: c.income, warning: c.warning, danger: c.danger }), fontSize: theme.type.caption, fontWeight: '700' }}>
-                        {statusLabel(p.status)}
+                      <Text style={{ color: budgetStatusColor(p.status, { ok: c.income, warning: c.warning, danger: c.danger }), fontSize: theme.type.caption, fontWeight: '700' }}>
+                        {budgetStatusLabel(p.status, t)}
                       </Text>
                     </View>
-                    <ProgressBar ratio={p.ratio} color={statusColor(p.status, { ok: c.accent, warning: c.warning, danger: c.danger })} />
+                    <ProgressBar ratio={p.ratio} color={budgetStatusColor(p.status, { ok: c.accent, warning: c.warning, danger: c.danger })} />
                     <Text style={{ color: c.textSecondary, fontSize: theme.type.caption, marginTop: 4 }}>
                       {t('budgets.spentOf', { spent: money(p.spent), cap: money(p.cap) })}
                       {p.status === 'exceeded' ? ` · ${t('budgets.overBy', { amount: money(p.spent - p.cap) })}` : p.status === 'warning' ? '' : ` · ${t('budgets.remaining', { amount: money(p.cap - p.spent) })}`}
@@ -142,7 +146,7 @@ export default function BudgetsScreen() {
                 <CategoryIcon icon={category.icon} color={category.color} />
                 <View style={styles.flex}>
                   <Text style={{ color: c.text, fontWeight: '600', fontSize: theme.type.body }}>
-                    {category.nameKey ? t(`categories.${category.nameKey.split('.')[1]}` as never) : category.name}
+                    {category.nameKey ? categoryLabel(category) : category.name}
                   </Text>
                   <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>
                     {money(spent)} · {t('home.noBudget')}
@@ -160,11 +164,11 @@ export default function BudgetsScreen() {
           <Pressable
             key={cat.id}
             onPress={() => openEdit(cat, budgets.find((b) => b.categoryId === cat.id)?.amount)}
-            style={[styles.chip, { borderColor: c.border, backgroundColor: c.surface, borderRadius: theme.radii.full }]}
+            style={[styles.chip, { borderColor: c.border, backgroundColor: c.surface, borderRadius: theme.radii.full , borderCurve: 'continuous'}]}
           >
             <CategoryIcon icon={cat.icon} color={cat.color} size={16} />
             <Text style={{ color: c.text, fontSize: theme.type.caption, marginLeft: 6 }}>
-              {cat.nameKey ? t(`categories.${cat.nameKey.split('.')[1]}` as never) : cat.name}
+              {cat.nameKey ? categoryLabel(cat) : cat.name}
             </Text>
           </Pressable>
         ))}
@@ -173,7 +177,7 @@ export default function BudgetsScreen() {
       {editing ? (
         <Card style={styles.editor}>
           <Text style={{ color: c.text, fontWeight: '700', fontSize: theme.type.body, marginBottom: 8 }}>
-            {editing.nameKey ? t(`categories.${editing.nameKey.split('.')[1]}` as never) : editing.name}
+            {editing.nameKey ? categoryLabel(editing) : editing.name}
           </Text>
           <TextInput
             value={capInput}
@@ -182,7 +186,7 @@ export default function BudgetsScreen() {
             placeholderTextColor={c.textSecondary}
             keyboardType="decimal-pad"
             autoFocus
-            style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, backgroundColor: c.background }]}
+            style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.background }]}
           />
           <View style={styles.editorButtons}>
             <Button title={t('common.cancel')} variant="ghost" onPress={() => setEditing(null)} style={styles.flex} />

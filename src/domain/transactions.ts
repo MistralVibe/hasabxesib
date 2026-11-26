@@ -19,7 +19,18 @@ export interface TransactionInput {
   date: string; // yyyy-mm-dd
 }
 
-export type TransactionValidation = { ok: true } | { ok: false; error: string };
+// Validation errors are i18n KEYS under errors.*, mapped to text at the UI layer.
+export type ValidationErrorKey =
+  | 'accountNotFound'
+  | 'categoryNotFound'
+  | 'categoryTypeMismatch'
+  | 'amountPositive'
+  | 'dateInvalid'
+  | 'accountsDiffer'
+  | 'bothAccountsExist'
+  | 'accountHasActivity';
+
+export type TransactionValidation = { ok: true } | { ok: false; error: ValidationErrorKey };
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -29,16 +40,16 @@ export function validateTransaction(
   categories: Category[],
 ): TransactionValidation {
   if (!accounts.some((a) => a.id === input.accountId && !a.isArchived)) {
-    return { ok: false, error: 'Account not found' };
+    return { ok: false, error: 'accountNotFound' };
   }
   const category = categories.find((c) => c.id === input.categoryId);
-  if (!category) return { ok: false, error: 'Category not found' };
-  if (category.type !== input.type) return { ok: false, error: 'Category type does not match transaction type' };
+  if (!category) return { ok: false, error: 'categoryNotFound' };
+  if (category.type !== input.type) return { ok: false, error: 'categoryTypeMismatch' };
   if (!Number.isInteger(input.amount) || input.amount <= 0) {
-    return { ok: false, error: 'Amount must be a positive integer of minor units' };
+    return { ok: false, error: 'amountPositive' };
   }
   if (!ISO_DATE.test(input.date) || Number.isNaN(Date.parse(input.date))) {
-    return { ok: false, error: 'Date must be yyyy-mm-dd' };
+    return { ok: false, error: 'dateInvalid' };
   }
   return { ok: true };
 }

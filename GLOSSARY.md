@@ -6,7 +6,7 @@ Domain language for HasabXesib, a cross-platform (iOS + Android) personal budget
 
 **Account**:
 A place where money lives — cash, a bank card, a bank account. Every **Transaction** and **Transfer** belongs to at least one **Account**. Has a derived **Balance**.
-_Avoid_: wallet, purse, card (when meaning the account itself)
+_Avoid_: wallet, purse
 
 **Transaction**:
 A single movement of money into (**income**) or out of (**expense**) an **Account**, tagged with a **Category**. Never a **Transfer**.

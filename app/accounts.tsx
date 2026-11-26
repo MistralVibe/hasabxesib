@@ -7,10 +7,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useI18n } from '@/i18n';
+import { useShallow } from 'zustand/react/shallow';
 import { useDataStore } from '@/stores/useDataStore';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useFormatters } from '@/hooks/useFormatters';
-import { toMinor, parseAmountInput } from '@/domain/money';
+import { toMinor, minorToInputString } from '@/domain/money';
 import { startOfDayISO } from '@/domain/dates';
 import { Account } from '@/domain/types';
 import { Button } from '@/components/ui/Button';
@@ -29,7 +30,14 @@ export default function AccountsScreen() {
   const { money } = useFormatters();
   const router = useRouter();
   const currency = useSettingsStore((s) => s.settings.currency);
-  const { accounts, transactions, transfers, balanceOf, totalBalance, addAccount, updateAccount, removeAccount, addTransfer } = useDataStore();
+  const { accounts, transactions, transfers, balanceOf, totalBalance, addAccount, updateAccount, removeAccount, reassignAndDeleteAccount, addTransfer } = useDataStore(
+    useShallow((s) => ({
+      accounts: s.accounts, transactions: s.transactions, transfers: s.transfers,
+      balanceOf: s.balanceOf, totalBalance: s.totalBalance, addAccount: s.addAccount,
+      updateAccount: s.updateAccount, removeAccount: s.removeAccount,
+      reassignAndDeleteAccount: s.reassignAndDeleteAccount, addTransfer: s.addTransfer,
+    })),
+  );
 
   const c = theme.colors;
   const [mode, setMode] = useState<Mode>('list');
@@ -42,6 +50,7 @@ export default function AccountsScreen() {
   const [toId, setToId] = useState<string | undefined>(accounts[1]?.id);
   const [amount, setAmount] = useState('');
   const [tNote, setTNote] = useState('');
+  const [tDate, setTDate] = useState(startOfDayISO(new Date()));
   const [error, setError] = useState('');
 
   const resetEditor = () => {
@@ -51,7 +60,7 @@ export default function AccountsScreen() {
   const openAdd = () => { resetEditor(); setMode('editor'); };
   const openEdit = (a: Account) => {
     setEditing(a); setName(a.name); setType(a.type); setColor(a.color);
-    setOpening(a.openingBalance ? String(a.openingBalance / 100) : '');
+    setOpening(a.openingBalance ? minorToInputString(a.openingBalance, useSettingsStore.getState().settings.currency) : '');
     setMode('editor'); setError('');
   };
 
@@ -70,16 +79,28 @@ export default function AccountsScreen() {
   };
 
   const confirmDelete = (a: Account) => {
-    Alert.alert(t('accounts.deleteTitle'), t('accounts.deleteBody'), [
+    const others = accounts.filter((x) => x.id !== a.id);
+    const buttons: { text: string; style?: 'cancel' | 'destructive'; onPress?: () => void }[] = [
       { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'), style: 'destructive',
+    ];
+    if (others.length > 0) {
+      buttons.push({
+        text: t('accounts.reassignDelete'),
         onPress: () => {
-          const result = removeAccount(a.id);
-          if (!result.ok) Alert.alert(t('common.error'), t('accounts.deleteGuard'));
+          // Reassign everything to the first other account, then delete.
+          reassignAndDeleteAccount(a.id, others[0].id);
+          if (mode === 'editor' && editing?.id === a.id) { resetEditor(); setMode('list'); }
         },
+      });
+    }
+    buttons.push({
+      text: t('common.delete'), style: 'destructive',
+      onPress: () => {
+        const result = removeAccount(a.id);
+        if (!result.ok) Alert.alert(t('common.error'), t(`errors.${result.error}` as never));
       },
-    ]);
+    });
+    Alert.alert(t('accounts.deleteTitle'), t('accounts.deleteBody'), buttons);
   };
 
   const saveTransfer = () => {
@@ -88,8 +109,8 @@ export default function AccountsScreen() {
     if (fromId === toId) { setError(t('accounts.sameAccount')); return; }
     const minor = toMinor(amount, currency);
     if (minor === null || minor <= 0) { setError(t('errors.invalidAmount')); return; }
-    const result = addTransfer({ fromAccountId: fromId, toAccountId: toId, amount: minor, note: tNote, date: startOfDayISO(new Date()) });
-    if (!result.ok) { setError(result.error); return; }
+    const result = addTransfer({ fromAccountId: fromId, toAccountId: toId, amount: minor, note: tNote, date: tDate });
+    if (!result.ok) { setError(t(`errors.${result.error}` as never)); return; }
     setMode('list'); setAmount(''); setTNote(''); setError('');
     Alert.alert(t('accounts.transferSaved'));
   };
@@ -111,7 +132,7 @@ export default function AccountsScreen() {
               <Text style={{ color: c.text, fontSize: theme.type.heading, fontWeight: '800' }}>{money(totalBalance())}</Text>
             </Card>
             {accounts.length === 0 ? (
-              <EmptyState icon="wallet-outline" title={t('accounts.emptyTitle')} body={t('accounts.emptyBody')} />
+              <EmptyState icon="cash-outline" title={t('accounts.emptyTitle')} body={t('accounts.emptyBody')} />
             ) : (
               accounts.map((a) => {
                 const hasActivity =
@@ -120,7 +141,7 @@ export default function AccountsScreen() {
                 return (
                   <Pressable key={a.id} onPress={() => openEdit(a)} onLongPress={() => hasActivity && confirmDelete(a)}>
                     <Card style={styles.accountRow}>
-                      <View style={[styles.badge, { backgroundColor: `${a.color}22`, borderRadius: theme.radii.full }]}>
+                      <View style={[styles.badge, { backgroundColor: `${a.color}22`, borderRadius: theme.radii.full , borderCurve: 'continuous'}]}>
                         <Ionicons name={a.icon as never} size={20} color={a.color} />
                       </View>
                       <View style={styles.flex}>
@@ -154,7 +175,7 @@ export default function AccountsScreen() {
             <TextInput
               value={name} onChangeText={setName}
               placeholder={t('accounts.namePlaceholder')} placeholderTextColor={c.textSecondary}
-              style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, backgroundColor: c.background }]}
+              style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.background }]}
             />
             <Text style={[styles.label, { color: c.textSecondary, fontSize: theme.type.caption }]}>{t('accounts.type')}</Text>
             <View style={styles.chips}>
@@ -162,7 +183,7 @@ export default function AccountsScreen() {
                 <Pressable
                   key={opt}
                   onPress={() => setType(opt)}
-                  style={[styles.chip, { borderColor: type === opt ? c.accent : c.border, backgroundColor: type === opt ? c.accentSoft : c.surface, borderRadius: theme.radii.full }]}
+                  style={[styles.chip, { borderColor: type === opt ? c.accent : c.border, backgroundColor: type === opt ? c.accentSoft : c.surface, borderRadius: theme.radii.full , borderCurve: 'continuous'}]}
                 >
                   <Text style={{ color: c.text, fontSize: theme.type.caption }}>{t(`accounts.type${opt[0].toUpperCase()}${opt.slice(1)}` as never)}</Text>
                 </Pressable>
@@ -175,7 +196,7 @@ export default function AccountsScreen() {
                   onPress={() => setColor(col)}
                   style={[
                     styles.colorDot,
-                    { backgroundColor: col, borderColor: color === col ? c.text : 'transparent', borderRadius: theme.radii.full },
+                    { backgroundColor: col, borderColor: color === col ? c.text : 'transparent', borderRadius: theme.radii.full , borderCurve: 'continuous'},
                   ]}
                 />
               ))}
@@ -184,7 +205,7 @@ export default function AccountsScreen() {
               value={opening} onChangeText={setOpening}
               placeholder={`${t('accounts.initialBalance')} (${currency})`} placeholderTextColor={c.textSecondary}
               keyboardType="decimal-pad"
-              style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, backgroundColor: c.background }]}
+              style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.background }]}
             />
             {error ? <Text style={{ color: c.danger }}>{error}</Text> : null}
             <View style={styles.buttonRow}>
@@ -204,7 +225,7 @@ export default function AccountsScreen() {
                 <Pressable
                   key={a.id}
                   onPress={() => setFromId(a.id)}
-                  style={[styles.chip, { borderColor: fromId === a.id ? c.accent : c.border, backgroundColor: fromId === a.id ? c.accentSoft : c.surface, borderRadius: theme.radii.full }]}
+                  style={[styles.chip, { borderColor: fromId === a.id ? c.accent : c.border, backgroundColor: fromId === a.id ? c.accentSoft : c.surface, borderRadius: theme.radii.full , borderCurve: 'continuous'}]}
                 >
                   <Text style={{ color: c.text, fontSize: theme.type.caption }}>{a.name}</Text>
                 </Pressable>
@@ -216,7 +237,7 @@ export default function AccountsScreen() {
                 <Pressable
                   key={a.id}
                   onPress={() => setToId(a.id)}
-                  style={[styles.chip, { borderColor: toId === a.id ? c.accent : c.border, backgroundColor: toId === a.id ? c.accentSoft : c.surface, borderRadius: theme.radii.full }]}
+                  style={[styles.chip, { borderColor: toId === a.id ? c.accent : c.border, backgroundColor: toId === a.id ? c.accentSoft : c.surface, borderRadius: theme.radii.full , borderCurve: 'continuous'}]}
                 >
                   <Text style={{ color: c.text, fontSize: theme.type.caption }}>{a.name}</Text>
                 </Pressable>
@@ -226,15 +247,21 @@ export default function AccountsScreen() {
               value={amount} onChangeText={setAmount}
               placeholder={`${t('common.amount')} (${currency})`} placeholderTextColor={c.textSecondary}
               keyboardType="decimal-pad"
+              style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.background }]}
+            />
+            {amount && toMinor(amount, currency) !== null ? (
+              <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>≈ {money(toMinor(amount, currency) ?? 0)}</Text>
+            ) : null}
+            <TextInput
+              value={tDate} onChangeText={setTDate}
+              placeholder="yyyy-mm-dd" placeholderTextColor={c.textSecondary}
+              autoCapitalize="none"
               style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, backgroundColor: c.background }]}
             />
-            {amount && parseAmountInput(amount) !== null ? (
-              <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>≈ {money(Math.round((parseAmountInput(amount) ?? 0) * 100))}</Text>
-            ) : null}
             <TextInput
               value={tNote} onChangeText={setTNote}
               placeholder={t('transactions.notePlaceholder')} placeholderTextColor={c.textSecondary}
-              style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, backgroundColor: c.background }]}
+              style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.background }]}
             />
             {error ? <Text style={{ color: c.danger }}>{error}</Text> : null}
             <View style={styles.buttonRow}>

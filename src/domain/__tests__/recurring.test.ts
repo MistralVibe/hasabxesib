@@ -29,7 +29,7 @@ describe('dueOccurrences', () => {
 describe('materializeDue', () => {
   it('posts each due occurrence once and advances nextDueDate past now', () => {
     const r = rule({ frequency: 'weekly', startDate: '2026-11-01', nextDueDate: '2026-11-01' });
-    const result = materializeDue(r, '2026-11-20', () => 'id');
+    const result = materializeDue(r, '2026-11-20');
     expect(result.postDates).toEqual(['2026-11-01', '2026-11-08', '2026-11-15']);
     expect(result.updatedRule.nextDueDate).toBe('2026-11-22');
     expect(result.transactions).toHaveLength(3);
@@ -42,7 +42,7 @@ describe('materializeDue', () => {
 
   it('monthly clamps Jan 31 across months', () => {
     const r = rule({ frequency: 'monthly', startDate: '2026-01-31', nextDueDate: '2026-01-31' });
-    const result = materializeDue(r, '2026-04-05', () => 'id');
+    const result = materializeDue(r, '2026-04-05');
     expect(result.postDates).toEqual(['2026-01-31', '2026-02-28', '2026-03-28']);
     expect(nextDueAfterMaterialize(r, '2026-04-05')).toBe('2026-04-28');
   });

@@ -5,8 +5,22 @@ export const ZERO_DECIMAL_CURRENCIES = new Set([
   'JPY', 'KRW', 'VND', 'CLP', 'ISK', 'UGX', 'DJF', 'GNF', 'KMF', 'MGA', 'PYG', 'RWF', 'XAF', 'XOF', 'XPF',
 ]);
 
-function exponentFor(currency: string): number {
+export function currencyExponent(currency: string): number {
   return ZERO_DECIMAL_CURRENCIES.has(currency.toUpperCase()) ? 0 : 2;
+}
+
+function exponentFor(currency: string): number {
+  return currencyExponent(currency);
+}
+
+/** Minor units -> decimal value (e.g. 1234 USD -> 12.34, 1500 JPY -> 1500). */
+export function fromMinor(minor: number, currency: string): number {
+  return minor / 10 ** exponentFor(currency);
+}
+
+/** Minor units -> plain decimal string for inputs ("12.34" / "1500"). */
+export function minorToInputString(minor: number, currency: string): string {
+  return fromMinor(minor, currency).toFixed(exponentFor(currency));
 }
 
 /**

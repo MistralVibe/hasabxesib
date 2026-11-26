@@ -1,17 +1,8 @@
 import { RecurringRule, Transaction, TransactionType } from './types';
-import { addDays, addMonths, addYears, nextDueAfter } from './dates';
+import { advanceDate, nextDueAfter } from './dates';
 
 function advance(iso: string, frequency: RecurringRule['frequency']): string {
-  switch (frequency) {
-    case 'daily':
-      return addDays(iso, 1);
-    case 'weekly':
-      return addDays(iso, 7);
-    case 'monthly':
-      return addMonths(iso, 1);
-    case 'yearly':
-      return addYears(iso, 1);
-  }
+  return advanceDate(iso, frequency);
 }
 
 /**
@@ -56,7 +47,7 @@ export interface MaterializeResult {
  * Compute the effect of auto-posting a rule on `nowISO`: which occurrences post
  * and where the rule's nextDueDate lands. Pure; the caller persists the result.
  */
-export function materializeDue(rule: RecurringRule, nowISO: string, makeId: () => string): MaterializeResult {
+export function materializeDue(rule: RecurringRule, nowISO: string): MaterializeResult {
   const postDates = dueOccurrences(rule, nowISO);
   const updatedRule: RecurringRule = { ...rule, nextDueDate: nextDueAfterMaterialize(rule, nowISO) };
   const transactions = postDates.map((date) => ({
@@ -68,7 +59,6 @@ export function materializeDue(rule: RecurringRule, nowISO: string, makeId: () =
     date,
     recurringRuleId: rule.id,
   }));
-  void makeId;
   return { postDates, updatedRule, transactions };
 }
 

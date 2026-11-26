@@ -48,10 +48,10 @@ describe('computeBalance', () => {
 
 describe('validateTransfer', () => {
   it('rejects same account and non-positive amounts', () => {
-    expect(validateTransfer(cash, cash, 100)).toEqual({ ok: false, error: 'Accounts must differ' });
-    expect(validateTransfer(cash, card, 0)).toEqual({ ok: false, error: 'Amount must be a positive integer of minor units' });
-    expect(validateTransfer(cash, card, 10.5)).toEqual({ ok: false, error: 'Amount must be a positive integer of minor units' });
-    expect(validateTransfer(undefined, card, 100)).toEqual({ ok: false, error: 'Both accounts must exist' });
+    expect(validateTransfer(cash, cash, 100)).toEqual({ ok: false, error: 'accountsDiffer' });
+    expect(validateTransfer(cash, card, 0)).toEqual({ ok: false, error: 'amountPositive' });
+    expect(validateTransfer(cash, card, 10.5)).toEqual({ ok: false, error: 'amountPositive' });
+    expect(validateTransfer(undefined, card, 100)).toEqual({ ok: false, error: 'bothAccountsExist' });
   });
 
   it('accepts a valid transfer', () => {

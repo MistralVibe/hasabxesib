@@ -1,5 +1,6 @@
 import { Account, Money, Transaction, Transfer } from './types';
 import { signedAmount } from './transactions';
+import type { ValidationErrorKey } from './transactions';
 
 /**
  * Balance of an account = opening balance + signed sum of its transactions
@@ -25,15 +26,15 @@ export function totalBalance(accounts: Account[], transactions: Transaction[], t
   return accounts.reduce((sum, a) => sum + computeBalance(a, transactions, transfers), 0);
 }
 
-export type TransferValidation = { ok: true } | { ok: false; error: string };
+export type TransferValidation = { ok: true } | { ok: false; error: ValidationErrorKey };
 
 export function validateTransfer(
   from: Account | undefined,
   to: Account | undefined,
   amount: Money,
 ): TransferValidation {
-  if (!from || !to) return { ok: false, error: 'Both accounts must exist' };
-  if (from.id === to.id) return { ok: false, error: 'Accounts must differ' };
-  if (!Number.isInteger(amount) || amount <= 0) return { ok: false, error: 'Amount must be a positive integer of minor units' };
+  if (!from || !to) return { ok: false, error: 'bothAccountsExist' };
+  if (from.id === to.id) return { ok: false, error: 'accountsDiffer' };
+  if (!Number.isInteger(amount) || amount <= 0) return { ok: false, error: 'amountPositive' };
   return { ok: true };
 }

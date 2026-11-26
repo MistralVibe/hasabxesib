@@ -1,10 +1,13 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useI18n } from '@/i18n';
+import { useCategoryLabel } from '@/hooks/useCategoryLabel';
 import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useDataStore } from '@/stores/useDataStore';
 import { listCurrencies, CurrencyInfo } from '@/domain/currencies';
 import { toMinor } from '@/domain/money';
@@ -17,9 +20,12 @@ type Step = 'currency' | 'budgets';
 export default function OnboardingScreen() {
   const { theme } = useTheme();
   const { t, language } = useI18n();
+  const categoryLabel = useCategoryLabel();
   const router = useRouter();
   const updateSettings = useSettingsStore((s) => s.update);
-  const { categories, upsertBudget } = useDataStore();
+  const { categories, upsertBudget } = useDataStore(
+    useShallow((s) => ({ categories: s.categories, upsertBudget: s.upsertBudget })),
+  );
 
   const [step, setStep] = useState<Step>('currency');
   const [query, setQuery] = useState('');
@@ -61,9 +67,9 @@ export default function OnboardingScreen() {
             onChangeText={setQuery}
             placeholder={t('onboarding.currencySearch')}
             placeholderTextColor={theme.colors.textSecondary}
-            style={[styles.input, { backgroundColor: theme.colors.surface, color: theme.colors.text, borderColor: theme.colors.border, borderRadius: theme.radii.md }]}
+            style={[styles.input, { backgroundColor: theme.colors.surface, color: theme.colors.text, borderColor: theme.colors.border, borderRadius: theme.radii.md , borderCurve: 'continuous'}]}
           />
-          <FlatList
+          <FlashList
             data={filtered}
             keyExtractor={(c: CurrencyInfo) => c.code}
             style={styles.flex}
@@ -100,7 +106,7 @@ export default function OnboardingScreen() {
           <Text style={[styles.body, { color: theme.colors.textSecondary, fontSize: theme.type.body }]}>
             {t('onboarding.budgetsBody')}
           </Text>
-          <FlatList
+          <FlashList
             data={expenseCategories}
             keyExtractor={(c) => c.id}
             style={styles.flex}
@@ -110,7 +116,7 @@ export default function OnboardingScreen() {
                 <View style={styles.rowText}>
                   <CategoryIcon icon={item.icon} color={item.color} />
                   <Text style={{ color: theme.colors.text, fontSize: theme.type.body, marginLeft: 12 }}>
-                    {item.nameKey ? t(`categories.${item.nameKey.split('.')[1]}` as never) : item.name}
+                    {item.nameKey ? categoryLabel(item) : item.name}
                   </Text>
                 </View>
                 <TextInput
@@ -119,7 +125,7 @@ export default function OnboardingScreen() {
                   placeholder={t('budgets.capPlaceholder')}
                   placeholderTextColor={theme.colors.textSecondary}
                   keyboardType="decimal-pad"
-                  style={[styles.capInput, { backgroundColor: theme.colors.background, color: theme.colors.text, borderColor: theme.colors.border, borderRadius: theme.radii.sm }]}
+                  style={[styles.capInput, { backgroundColor: theme.colors.background, color: theme.colors.text, borderColor: theme.colors.border, borderRadius: theme.radii.sm , borderCurve: 'continuous'}]}
                 />
               </Card>
             )}
@@ -143,8 +149,8 @@ const styles = StyleSheet.create({
   input: { paddingHorizontal: 14, paddingVertical: 10, borderWidth: StyleSheet.hairlineWidth },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   rowText: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  radioDot: { width: 12, height: 12, borderRadius: 6 },
+  radio: { width: 22, height: 22, borderRadius: 11, borderCurve: 'continuous', borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  radioDot: { width: 12, height: 12, borderRadius: 6 , borderCurve: 'continuous'},
   footer: { paddingTop: 8 },
   budgetRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingVertical: 10 },
   capInput: { width: 120, paddingHorizontal: 10, paddingVertical: 8, borderWidth: StyleSheet.hairlineWidth, textAlign: 'right' },

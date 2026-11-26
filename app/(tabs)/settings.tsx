@@ -124,7 +124,7 @@ export default function SettingsScreen() {
           onPress={() => onChange(o.value)}
           style={[
             styles.chip,
-            { borderColor: current === o.value ? c.accent : c.border, backgroundColor: current === o.value ? c.accentSoft : c.surface, borderRadius: theme.radii.full },
+            { borderColor: current === o.value ? c.accent : c.border, backgroundColor: current === o.value ? c.accentSoft : c.surface, borderRadius: theme.radii.full , borderCurve: 'continuous'},
           ]}
         >
           <Text style={{ color: current === o.value ? c.accent : c.text, fontSize: theme.type.caption, fontWeight: '600' }}>{o.label}</Text>
@@ -145,7 +145,7 @@ export default function SettingsScreen() {
           { value: 'light', label: t('settings.themeLight') },
           { value: 'dark', label: t('settings.themeDark') },
         ], mode, (v) => setMode(v as ThemeMode))}
-        <Text style={{ color: c.textSecondary, fontSize: theme.type.caption, margin: '8px 0' }}>{t('settings.language')}</Text>
+        <Text style={{ color: c.textSecondary, fontSize: theme.type.caption, marginTop: 8, marginBottom: 8 }}>{t('settings.language')}</Text>
         {optionRow('', [
           { value: 'en', label: 'English' },
           { value: 'ru', label: 'Русский' },
@@ -179,7 +179,7 @@ export default function SettingsScreen() {
             keyboardType="numbers-and-punctuation"
             style={[
               styles.timeInput,
-              { color: c.text, borderColor: c.border, borderRadius: theme.radii.sm, backgroundColor: c.background, marginTop: 8 },
+              { color: c.text, borderColor: c.border, borderRadius: theme.radii.sm, borderCurve: 'continuous', backgroundColor: c.background, marginTop: 8 },
             ]}
           />
         ) : null}
