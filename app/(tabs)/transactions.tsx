@@ -133,6 +133,7 @@ export default function TransactionsScreen() {
 
       <FlashList
         data={listData}
+        contentContainerStyle={styles.listContent}
         getItemType={(item: ListItem) => item.kind}
         keyExtractor={(item: ListItem) => (item.kind === 'header' ? `h-${item.date}` : item.tx.id)}
         renderItem={({ item }: { item: ListItem }) => {
@@ -173,6 +174,7 @@ export default function TransactionsScreen() {
         onPress={() => router.push({ pathname: '/transaction', params: {} })}
         style={[styles.fab, { backgroundColor: c.accent, borderRadius: theme.radii.full , borderCurve: 'continuous'}]}
         accessibilityRole="button"
+        accessibilityLabel={t('transactions.add')}
       >
         <Ionicons name="add" size={28} color={c.accentText} />
       </Pressable>
@@ -190,6 +192,8 @@ const styles = StyleSheet.create({
   chip: { paddingHorizontal: 10, paddingVertical: 5, borderWidth: StyleSheet.hairlineWidth },
   chipText: { fontWeight: '600' },
   header: { fontWeight: '700', marginTop: 10, marginBottom: 4, paddingHorizontal: 4 },
+  // FAB clearance: 56 FAB + 20 bottom offset + breathing room, matching Home.
+  listContent: { paddingBottom: 96 },
   txRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8, paddingVertical: 10 },
   flex: { flex: 1 },
   fab: {
