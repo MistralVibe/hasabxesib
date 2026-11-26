@@ -1,0 +1,280 @@
+<!doctype html>
+<!-- PROTOTYPE — throwaway. Not production code. Not part of the app. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HasabXesib — New transaction modal prototype</title>
+<style>
+  :root { --phone-w: 390px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d0d12; color: #e8e8ef;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 28px 16px 120px;
+  }
+  h1 { font-size: 15px; font-weight: 600; opacity: .75; margin-bottom: 6px; letter-spacing: .2px; }
+  .sub { font-size: 13px; opacity: .5; margin-bottom: 22px; }
+
+  .phone {
+    width: var(--phone-w); border-radius: 46px; padding: 10px;
+    background: #1a1a22; box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  }
+  .screen {
+    border-radius: 38px; overflow: hidden; position: relative;
+    height: 812px; display: flex; flex-direction: column;
+  }
+
+  /* ============ Dusk A v2 — modal (quiet; the gradient lives in Save) ============ */
+  .sheet {
+    --bg: #0B0E1A; --surface: #151A2E; --surface2: #1B2140; --text: #EEF0FF; --text2: #8B93B8;
+    --accent: #818CF8; --accent2: #C084FC; --income: #34D399; --expense: #FB7185; --warning: #FBBF24;
+    --hair: rgba(255,255,255,.07);
+    --grad1: #4F46E5; --grad2: #7C3AED;       /* deepened accent stops for white-label contrast */
+    --expFill: #E11D48; --incFill: #047857;    /* deepened segment fills for white labels */
+    background: var(--bg); color: var(--text);
+    display: flex; flex-direction: column; flex: 1; min-height: 0;
+  }
+  .sheet.light {
+    --bg: #F2F3FB; --surface: #FFFFFF; --surface2: #F4F4FE; --text: #14162B; --text2: #63687F;
+    --accent: #4F46E5; --accent2: #7C3AED; --income: #047857; --expense: #BE123C; --warning: #B45309;
+    --hair: rgba(20,22,43,.08);
+    --expFill: #BE123C; --incFill: #047857;
+  }
+  .statusbar { height: 44px; flex: none; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 26px 6px; font-size: 13px; font-weight: 600; color: var(--text); }
+  .scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 8px 22px 26px;
+    display: flex; flex-direction: column; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .tabnum { font-variant-numeric: tabular-nums; }
+
+  /* header */
+  .headrow { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+  .headrow h2 { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
+  .xbtn { width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--hair);
+    background: var(--surface); color: var(--text2); display: flex; align-items: center;
+    justify-content: center; cursor: pointer; }
+
+  /* segmented control */
+  .segtrack { margin-top: 18px; display: flex; gap: 4px; padding: 4px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--hair); }
+  .seg { flex: 1; min-height: 46px; border: none; border-radius: 999px; background: transparent;
+    color: var(--text2); font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 7px; }
+  .seg.on { color: #fff; font-weight: 800; background: var(--expFill); }
+  .seg.on.income-on { background: var(--incFill); }
+  .seg svg { flex: none; }
+
+  /* amount hero */
+  .amounthero { text-align: center; margin-top: 26px; }
+  .curcap { font-size: 12px; font-weight: 700; letter-spacing: 1.4px; color: var(--text2); text-transform: uppercase; }
+  .amountrow { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; }
+  .bignum { font-size: 50px; font-weight: 800; letter-spacing: -2px; line-height: 1;
+    font-variant-numeric: tabular-nums; color: var(--text); }
+  .caret { width: 3px; height: 42px; border-radius: 2px; background: var(--expense);
+    animation: blink 1.15s infinite; }
+  .caret.income-caret { background: var(--income); }
+  @keyframes blink { 50% { opacity: 0; } }
+  .avail { margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--text2);
+    font-variant-numeric: tabular-nums; }
+
+  /* section captions + chips */
+  .cap { font-size: 13px; font-weight: 600; color: var(--text2); margin: 26px 0 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 16px;
+    border-radius: 999px; border: 1.5px solid var(--hair); background: var(--surface);
+    color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .chip .dot { width: 9px; height: 9px; border-radius: 999px; flex: none; }
+  .chip.sel { border-color: var(--selc); background: color-mix(in srgb, var(--selc) 14%, transparent); }
+  .chip.acc { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); }
+
+  /* note + date fields */
+  .field { display: flex; align-items: center; gap: 12px; min-height: 54px; margin-top: 26px;
+    padding: 0 16px; border-radius: 18px; background: var(--surface);
+    border: 1px solid var(--hair); color: var(--text2); font-size: 15px; }
+  .field .val { color: var(--text); font-weight: 600; flex: 1; }
+  .field svg { flex: none; opacity: .8; }
+
+  /* actions */
+  .actions { margin-top: auto; padding-top: 30px; display: flex; flex-direction: column; gap: 10px; }
+  .savebtn { min-height: 56px; border: none; border-radius: 999px; cursor: pointer; font-family: inherit;
+    background: linear-gradient(135deg, var(--grad1), var(--grad2));
+    color: #fff; font-size: 17px; font-weight: 800; letter-spacing: .2px;
+    box-shadow: 0 12px 30px color-mix(in srgb, var(--grad1) 42%, transparent); }
+  .ghostbtn { min-height: 44px; border: none; background: transparent; color: var(--text2);
+    font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; border-radius: 999px; }
+
+  /* entrance — one orchestrated rise, re-runs on theme change */
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .play .rise { animation: rise .55s cubic-bezier(.2,.7,.2,1) both; }
+  .play .rise:nth-child(1) { animation-delay: 0s; }
+  .play .rise:nth-child(2) { animation-delay: .06s; }
+  .play .rise:nth-child(3) { animation-delay: .12s; }
+  .play .rise:nth-child(4) { animation-delay: .18s; }
+  .play .rise:nth-child(5) { animation-delay: .24s; }
+  .play .rise:nth-child(6) { animation-delay: .3s; }
+  .play .rise:nth-child(7) { animation-delay: .36s; }
+  .play .rise:nth-child(8) { animation-delay: .42s; }
+
+  /* ---------- floating bar (NOT part of the design) ---------- */
+  .switcher {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px; z-index: 50;
+    background: #fff; color: #111; border-radius: 999px; padding: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5); font-size: 13px; user-select: none;
+  }
+  .switcher button {
+    border: none; background: transparent; padding: 8px 14px; font-size: 13px;
+    cursor: pointer; border-radius: 999px; font-family: inherit;
+  }
+  .switcher button:hover { background: #eee; }
+
+  @media (max-width: 480px) {
+    /* On a real phone: no stage, no frame — the prototype fills the screen. */
+    body { padding: 0; background: #000; }
+    h1, .sub { display: none; }
+    .phone { width: 100vw; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }
+    .screen { border-radius: 0; height: 100dvh; }
+    .switcher { bottom: max(10px, env(safe-area-inset-bottom)); padding: 4px; }
+  }
+</style>
+</head>
+<body>
+  <h1>HasabXesib — New transaction modal prototype</h1>
+  <div class="sub">Dusk A v2 · full-screen sheet · ☀/☾ toggles theme · throwaway mockup, no blur, RN-implementable</div>
+
+  <div class="phone"><div class="screen play" id="screen">
+    <div class="sheet" id="sheet">
+      <div class="statusbar"><span>21:40</span><span>▮▮▮ ᯤ</span></div>
+      <div class="scroll">
+
+        <!-- header -->
+        <div class="headrow rise">
+          <h2>New transaction</h2>
+          <button class="xbtn" aria-label="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+
+        <!-- type segmented control -->
+        <div class="segtrack rise" role="tablist">
+          <button class="seg on" id="segExpense">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            Expense
+          </button>
+          <button class="seg" id="segIncome">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            Income
+          </button>
+        </div>
+
+        <!-- amount hero -->
+        <div class="amounthero rise">
+          <div class="curcap">TMT</div>
+          <div class="amountrow">
+            <span class="bignum" id="bignum">85.00</span>
+            <span class="caret" id="caret"></span>
+          </div>
+          <div class="avail" id="avail">of 900.00 available</div>
+        </div>
+
+        <!-- category chips -->
+        <div class="rise" id="catWrap">
+          <div class="cap">Category</div>
+          <div class="chips" id="catChips">
+            <button class="chip sel" style="--selc:#F59E0B" data-color="#F59E0B"><span class="dot" style="background:#F59E0B"></span>Food &amp; dining</button>
+            <button class="chip" style="--selc:#FB7185" data-color="#FB7185"><span class="dot" style="background:#FB7185"></span>Health</button>
+            <button class="chip" style="--selc:#38BDF8" data-color="#38BDF8"><span class="dot" style="background:#38BDF8"></span>Transport</button>
+            <button class="chip" style="--selc:#F472B6" data-color="#F472B6"><span class="dot" style="background:#F472B6"></span>Entertainment</button>
+            <button class="chip" style="--selc:#A78BFA" data-color="#A78BFA"><span class="dot" style="background:#A78BFA"></span>Subscriptions</button>
+            <button class="chip" style="--selc:#7E8CC9" data-color="#7E8CC9"><span class="dot" style="background:#7E8CC9"></span>Housing</button>
+          </div>
+        </div>
+
+        <!-- account chips -->
+        <div class="rise" id="accWrap">
+          <div class="cap">Account</div>
+          <div class="chips" id="accChips">
+            <button class="chip acc" data-avail="900.00">Cash</button>
+            <button class="chip" data-avail="2,055.00">Card</button>
+          </div>
+        </div>
+
+        <!-- note -->
+        <div class="field rise">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          <span>Note (optional)</span>
+        </div>
+
+        <!-- date -->
+        <div class="field rise">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+          <span class="val">26 November 2026</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+
+        <!-- actions -->
+        <div class="actions rise">
+          <button class="savebtn">Save</button>
+          <button class="ghostbtn">Cancel</button>
+        </div>
+
+      </div>
+    </div>
+  </div></div>
+
+  <!-- switcher — obviously not part of the design -->
+  <div class="switcher">
+    <button id="theme" aria-label="toggle theme">☀/☾</button>
+  </div>
+
+<script>
+  const el = (id) => document.getElementById(id);
+  const sheet = el('sheet'), screen = el('screen');
+
+  /* entrance replays on theme change (RN: Animated stagger) */
+  function replay() {
+    screen.classList.remove('play');
+    void screen.offsetWidth;          /* reflow to restart animations */
+    screen.classList.add('play');
+  }
+  el('theme').onclick = () => { sheet.classList.toggle('light'); replay(); };
+
+  /* type toggle: expense / income — recolors segment, caret, chip set */
+  const expenseChips = el('catChips').innerHTML;
+  const incomeChips =
+    '<button class="chip sel" style="--selc:#10B981" data-color="#10B981"><span class="dot" style="background:#10B981"></span>Salary</button>';
+  let isIncome = false;
+  function setType(income) {
+    isIncome = income;
+    el('segExpense').classList.toggle('on', !income);
+    el('segIncome').classList.toggle('on', income);
+    el('segIncome').classList.toggle('income-on', income);
+    el('caret').classList.toggle('income-caret', income);
+    el('catChips').innerHTML = income ? incomeChips : expenseChips;
+    wireChips();
+  }
+  el('segExpense').onclick = () => setType(false);
+  el('segIncome').onclick = () => setType(true);
+
+  /* category + account chips are selectable (mock state only) */
+  function wireChips() {
+    el('catChips').querySelectorAll('.chip').forEach((c) => {
+      c.onclick = () => {
+        el('catChips').querySelectorAll('.chip').forEach((x) => x.classList.remove('sel'));
+        c.classList.add('sel');
+      };
+    });
+  }
+  wireChips();
+  el('accChips').querySelectorAll('.chip').forEach((c) => {
+    c.onclick = () => {
+      el('accChips').querySelectorAll('.chip').forEach((x) => x.classList.remove('acc'));
+      c.classList.add('acc');
+      el('avail').textContent = 'of ' + c.dataset.avail + ' available';
+    };
+  });
+</script>
+</body>
+</html>

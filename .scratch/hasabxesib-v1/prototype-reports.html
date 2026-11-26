@@ -1,0 +1,360 @@
+<!doctype html>
+<!-- PROTOTYPE — throwaway. Not production code. Not part of the app. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HasabXesib — Reports tab prototype</title>
+<style>
+  :root { --phone-w: 390px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d0d12; color: #e8e8ef;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 28px 16px 120px;
+  }
+  h1 { font-size: 15px; font-weight: 600; opacity: .75; margin-bottom: 6px; letter-spacing: .2px; }
+  .sub { font-size: 13px; opacity: .5; margin-bottom: 22px; }
+
+  .phone { width: var(--phone-w); border-radius: 46px; padding: 10px;
+    background: #1a1a22; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+  .screen { border-radius: 38px; overflow: hidden; position: relative;
+    height: 812px; display: flex; flex-direction: column; }
+  .scroll { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .tabnum { font-variant-numeric: tabular-nums; }
+
+  /* ================= Dusk A v2 — Reports ================= */
+  .rep {
+    --bg: #0B0E1A; --surface: #151A2E; --surface2: #1B2140; --text: #EEF0FF; --text2: #8B93B8;
+    --accent: #818CF8; --accent2: #C084FC; --income: #34D399; --expense: #FB7185;
+    --hair: rgba(255,255,255,.07);
+    background: var(--bg); color: var(--text);
+    display: flex; flex-direction: column; height: 100%;
+  }
+  .rep.light {
+    --bg: #F2F3FB; --surface: #FFFFFF; --surface2: #F4F4FE; --text: #14162B; --text2: #63687F;
+    --accent: #4F46E5; --accent2: #7C3AED; --income: #047857; --expense: #BE123C;
+    --hair: rgba(20,22,43,.08);
+  }
+  .rep .statusbar { height: 44px; flex: none; display: flex; align-items: flex-end;
+    justify-content: space-between; padding: 0 26px 6px; font-size: 13px; font-weight: 600;
+    color: var(--text); }
+
+  /* — compact dusk band — */
+  .rep .sky {
+    position: relative; overflow: hidden; padding: 14px 22px 46px;
+    background: linear-gradient(165deg, #181343 0%, #2B2770 48%, #4A2B8F 100%);
+    border-radius: 0 0 36px 36px; color: #F1F0FF;
+  }
+  .rep.light .sky { background: linear-gradient(165deg, #DAE0FF 0%, #E9E8FF 55%, #F6ECFF 100%); color: #171935; }
+  .rep .aurora { position: absolute; border-radius: 999px; pointer-events: none; }
+  .rep .a1 { width: 320px; height: 320px; top: -170px; right: -90px;
+    background: radial-gradient(circle, rgba(129,140,248,.4) 0%, transparent 62%); }
+  .rep .a2 { width: 280px; height: 280px; bottom: -170px; left: -90px;
+    background: radial-gradient(circle, rgba(192,132,252,.32) 0%, transparent 62%); }
+  .rep.light .a1 { background: radial-gradient(circle, rgba(99,102,241,.22) 0%, transparent 62%); }
+  .rep.light .a2 { background: radial-gradient(circle, rgba(168,85,247,.18) 0%, transparent 62%); }
+  .rep .title-row { display: flex; align-items: center; justify-content: space-between; position: relative; }
+  .rep .title-row h2 { font-size: 30px; font-weight: 800; letter-spacing: -1px; }
+  .rep .cur-chip { border: 1px solid currentColor; opacity: .85; border-radius: 999px;
+    padding: 4px 11px; font-size: 11px; font-weight: 700; letter-spacing: .4px; }
+
+  /* — month selector card (straddles the band) — */
+  .rep .monthcard {
+    position: relative; z-index: 2; margin: -32px 18px 0;
+    background: var(--surface); border: 1px solid var(--hair); border-radius: 22px;
+    display: flex; align-items: center; padding: 4px 10px;
+    box-shadow: 0 14px 34px rgba(0,0,0,.28);
+  }
+  .rep.light .monthcard { box-shadow: 0 14px 34px rgba(31,41,85,.1); }
+  .rep .mbtn { width: 44px; height: 44px; flex: none; display: flex; align-items: center;
+    justify-content: center; background: none; border: none; color: var(--text);
+    border-radius: 999px; cursor: pointer; }
+  .rep .mbtn:active { background: var(--hair); }
+  .rep .mbtn[disabled] { opacity: .3; cursor: default; }
+  .rep .mlabel { flex: 1; text-align: center; font-size: 16px; font-weight: 700; letter-spacing: -.2px; }
+
+  /* — cards — */
+  .rep .card {
+    margin: 14px 18px 0; background: var(--surface); border: 1px solid var(--hair);
+    border-radius: 24px; padding: 18px 20px; box-shadow: 0 14px 34px rgba(0,0,0,.24);
+  }
+  .rep.light .card { box-shadow: 0 14px 34px rgba(31,41,85,.08); }
+  .rep .card h3 { font-size: 15px; font-weight: 700; letter-spacing: -.1px; }
+  .rep .card .cap { font-size: 13px; color: var(--text2); margin-top: 3px; }
+  .rep .last { margin-bottom: 26px; }
+
+  /* — donut + legend — */
+  .rep .donutwrap { display: flex; justify-content: center; padding: 18px 0 6px; }
+  .rep .donutwrap svg { filter: drop-shadow(0 6px 18px rgba(129,140,248,.28)); }
+  .rep.light .donutwrap svg { filter: none; }
+  .rep .donut { position: relative; width: 168px; height: 168px; }
+  .rep .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; }
+  .rep .donut-center b { font-size: 24px; font-weight: 800; letter-spacing: -.5px; }
+  .rep .donut-center span { font-size: 12px; color: var(--text2); font-weight: 600; margin-top: 2px; }
+  .rep .legend { margin-top: 8px; }
+  .rep .lrow { display: flex; align-items: center; gap: 11px; padding: 9px 0;
+    border-bottom: 1px solid var(--hair); }
+  .rep .lrow:last-child { border-bottom: none; padding-bottom: 0; }
+  .rep .ldot { width: 10px; height: 10px; border-radius: 999px; flex: none; }
+  .rep .lrow .nm { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; }
+  .rep .lrow .am { font-size: 15px; font-weight: 700; }
+  .rep .lrow .pc { width: 44px; text-align: right; font-size: 13px; font-weight: 600; color: var(--text2); }
+
+  /* — income vs expenses bars — */
+  .rep .trow { display: flex; align-items: baseline; justify-content: space-between; }
+  .rep .legend-inline { display: flex; gap: 14px; font-size: 13px; color: var(--text2); }
+  .rep .legend-inline em { font-style: normal; display: inline-flex; align-items: center; gap: 6px; }
+  .rep .legend-inline i { width: 9px; height: 9px; border-radius: 999px; display: inline-block; }
+  .rep .bararea { display: flex; align-items: flex-end; gap: 2px; height: 132px; margin-top: 14px; }
+  .rep .bargroup { flex: 1; display: flex; justify-content: center; align-items: flex-end; gap: 2px;
+    opacity: .45; }
+  .rep .bargroup.now { opacity: 1; }
+  .rep .bar { width: 5px; border-radius: 2px 2px 0 0; }
+  .rep .axis { height: 1px; background: var(--hair); margin-top: 4px; }
+  .rep .axisrow { display: flex; margin-top: 6px; }
+  .rep .axisrow span { flex: 1; text-align: center; font-size: 9px; font-weight: 600; color: var(--text2); }
+  .rep .axisrow span.now { color: var(--text); font-weight: 800; }
+
+  /* — spending trend (dots + rotated segments, all hand-placed) — */
+  .rep .trendwrap { position: relative; width: 302px; height: 128px; margin: 16px auto 4px; }
+  .rep .tgrid { position: absolute; left: 0; right: 0; height: 1px; background: var(--hair); }
+  .rep .tlab { position: absolute; left: 0; width: 16px; font-size: 9px; font-weight: 600;
+    color: var(--text2); line-height: 1; }
+  .rep .seg { position: absolute; height: 2px; border-radius: 2px; background: var(--accent); }
+  .rep .tdot { position: absolute; width: 6px; height: 6px; border-radius: 999px;
+    background: var(--accent); border: 1px solid var(--surface); }
+  .rep .tdot.now { width: 9px; height: 9px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+    box-shadow: 0 0 0 4px rgba(129,140,248,.18); border-width: 2px; }
+
+  /* — biggest transactions (Home-style tx rows, one surface) — */
+  .rep .txs { margin-top: 8px; }
+  .rep .tx { display: flex; align-items: center; gap: 12px; padding: 11px 0;
+    border-bottom: 1px solid var(--hair); }
+  .rep .tx:last-child { border-bottom: none; }
+  .rep .cat-dot { width: 38px; height: 38px; border-radius: 999px; flex: none;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .rep .grow { flex: 1; min-width: 0; }
+  .rep .tx .t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rep .tx .s { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .rep .amt { font-size: 15px; font-weight: 700; }
+
+  /* — dock (Home style) — */
+  .rep .dock { margin: 14px; border-radius: 26px; background: var(--surface);
+    border: 1px solid var(--hair); display: flex; padding: 8px; flex: none;
+    box-shadow: 0 12px 32px rgba(0,0,0,.4); }
+  .rep.light .dock { box-shadow: 0 12px 32px rgba(31,41,85,.12); }
+  .rep .dock div { flex: 1; text-align: center; font-size: 10px; color: var(--text2);
+    padding: 7px 0; border-radius: 18px; }
+  .rep .dock div svg { display: block; margin: 0 auto 3px; opacity: .9; }
+  .rep .dock .on { background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent); font-weight: 700; }
+
+  /* — staggered entrance, re-run per theme change — */
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .rep.anim .rise { animation: rise .55s cubic-bezier(.2,.7,.2,1) both; }
+
+  /* ---------- floating bar (NOT part of the design) ---------- */
+  .switcher {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px; z-index: 50;
+    background: #fff; color: #111; border-radius: 999px; padding: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5); font-size: 13px; user-select: none;
+  }
+  .switcher button { border: none; background: transparent; padding: 8px 14px; font-size: 13px;
+    cursor: pointer; border-radius: 999px; font-family: inherit; }
+  .switcher button:hover { background: #eee; }
+
+  @media (max-width: 480px) {
+    /* On a real phone: no stage, no frame — the prototype fills the screen. */
+    body { padding: 0; background: #000; }
+    h1, .sub { display: none; }
+    .phone { width: 100vw; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }
+    .screen { border-radius: 0; height: 100dvh; }
+    .switcher { bottom: max(10px, env(safe-area-inset-bottom)); padding: 4px; }
+  }
+</style>
+</head>
+<body>
+  <h1>HasabXesib — Reports tab prototype</h1>
+  <div class="sub">Dusk A v2 · ☀/☾ toggles theme · throwaway mockup — no blur, no chart libs, RN-implementable</div>
+
+  <div class="phone"><div class="screen">
+    <div class="rep anim" id="rep">
+      <div class="statusbar"><span>21:40</span><span>▮▮▮ ᯤ</span></div>
+      <div class="scroll">
+
+        <!-- dusk band -->
+        <div class="sky rise">
+          <div class="aurora a1"></div>
+          <div class="aurora a2"></div>
+          <div class="title-row">
+            <h2>Reports</h2>
+            <span class="cur-chip">TMT</span>
+          </div>
+        </div>
+
+        <!-- month selector -->
+        <div class="monthcard rise" style="animation-delay:.06s">
+          <button class="mbtn" aria-label="Previous month">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="mlabel">November 2026</div>
+          <button class="mbtn" disabled aria-label="Next month">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+
+        <!-- spending by category -->
+        <div class="card rise" style="animation-delay:.12s">
+          <h3>Spending by category</h3>
+          <div class="donutwrap">
+            <div class="donut">
+              <!-- largest slice (Health) starts at 12 o'clock; segments = category colors -->
+              <svg width="168" height="168" viewBox="0 0 168 168">
+                <circle cx="84" cy="84" r="75" fill="none" stroke="var(--hair)" stroke-width="18"/>
+                <circle cx="84" cy="84" r="75" fill="none" stroke="#FB7185" stroke-width="18"
+                        stroke-dasharray="251.97 471.24" transform="rotate(-90 84 84)"/>
+                <circle cx="84" cy="84" r="75" fill="none" stroke="#F59E0B" stroke-width="18"
+                        stroke-dasharray="105.89 471.24" transform="rotate(104.4 84 84)"/>
+                <circle cx="84" cy="84" r="75" fill="none" stroke="#C084FC" stroke-width="18"
+                        stroke-dasharray="58.76 471.24" transform="rotate(187.2 84 84)"/>
+                <circle cx="84" cy="84" r="75" fill="none" stroke="#38BDF8" stroke-width="18"
+                        stroke-dasharray="44.62 471.24" transform="rotate(234 84 84)"/>
+              </svg>
+              <div class="donut-center"><b class="tabnum">668.00</b><span>spent</span></div>
+            </div>
+          </div>
+          <div class="legend tabnum">
+            <div class="lrow"><span class="ldot" style="background:#F59E0B"></span><span class="nm">Food &amp; dining</span><span class="am">156.80</span><span class="pc">23%</span></div>
+            <div class="lrow"><span class="ldot" style="background:#FB7185"></span><span class="nm">Health</span><span class="am">360.00</span><span class="pc">54%</span></div>
+            <div class="lrow"><span class="ldot" style="background:#38BDF8"></span><span class="nm">Transport</span><span class="am">66.20</span><span class="pc">10%</span></div>
+            <div class="lrow"><span class="ldot" style="background:#C084FC"></span><span class="nm">Entertainment</span><span class="am">85.00</span><span class="pc">13%</span></div>
+          </div>
+        </div>
+
+        <!-- income vs expenses -->
+        <div class="card rise" style="animation-delay:.18s">
+          <div class="trow">
+            <h3>Income vs expenses</h3>
+            <div class="legend-inline">
+              <em><i style="background:var(--income)"></i>Income</em>
+              <em><i style="background:var(--expense)"></i>Expenses</em>
+            </div>
+          </div>
+          <div class="cap">Last 12 months</div>
+          <div class="bararea tabnum">
+            <div class="bargroup"><i class="bar" style="height:9.2px; background:var(--expense)"></i></div>
+            <div class="bargroup"><i class="bar" style="height:7.9px; background:var(--expense)"></i></div>
+            <div class="bargroup"><i class="bar" style="height:11.4px; background:var(--expense)"></i></div>
+            <div class="bargroup"><i class="bar" style="height:13.2px; background:var(--income)"></i><i class="bar" style="height:10.6px; background:var(--expense)"></i></div>
+            <div class="bargroup"><i class="bar" style="height:8.4px; background:var(--expense)"></i></div>
+            <div class="bargroup"><i class="bar" style="height:14.1px; background:var(--expense)"></i></div>
+            <div class="bargroup"><i class="bar" style="height:13.2px; background:var(--income)"></i><i class="bar" style="height:6.6px; background:var(--expense)"></i></div>
+            <div class="bargroup"><i class="bar" style="height:12.3px; background:var(--expense)"></i></div>
+            <div class="bargroup"><i class="bar" style="height:10.1px; background:var(--expense)"></i></div>
+            <div class="bargroup"><i class="bar" style="height:13.2px; background:var(--income)"></i><i class="bar" style="height:15px; background:var(--expense)"></i></div>
+            <div class="bargroup"><i class="bar" style="height:12.8px; background:var(--expense)"></i></div>
+            <div class="bargroup now"><i class="bar" style="height:132px; background:var(--income)"></i><i class="bar" style="height:29.4px; background:var(--expense)"></i></div>
+          </div>
+          <div class="axis"></div>
+          <div class="axisrow tabnum">
+            <span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span>
+            <span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span class="now">Nov</span>
+          </div>
+        </div>
+
+        <!-- spending trend: 12 hand-placed dots + rotated 2px segments -->
+        <div class="card rise" style="animation-delay:.24s">
+          <h3>Spending trend</h3>
+          <div class="cap">Last 12 months</div>
+          <div class="trendwrap tabnum">
+            <div class="tgrid" style="top:8px"></div>
+            <div class="tgrid" style="top:94.9px"></div>
+            <div class="tlab" style="top:4px">668</div>
+            <div class="tlab" style="top:90.9px">150</div>
+            <!-- segments -->
+            <i class="seg" style="width:24.5px;  left:19.7px;  top:86.3px;  transform:rotate(11.8deg)"></i>
+            <i class="seg" style="width:27.5px;  left:42.3px;  top:82.1px;  transform:rotate(-29.2deg)"></i>
+            <i class="seg" style="width:24.2px;  left:67.9px;  top:77.1px;  transform:rotate(8.1deg)"></i>
+            <i class="seg" style="width:25.2px;  left:91.4px;  top:83px;    transform:rotate(19.1deg)"></i>
+            <i class="seg" style="width:32.5px;  left:111.7px; top:76.2px;  transform:rotate(-42.2deg)"></i>
+            <i class="seg" style="width:37.4px;  left:133.3px; top:79.6px;  transform:rotate(50deg)"></i>
+            <i class="seg" style="width:32.5px;  left:159.7px; top:83px;    transform:rotate(-42.2deg)"></i>
+            <i class="seg" style="width:25.2px;  left:187.4px; top:76.3px;  transform:rotate(19.1deg)"></i>
+            <i class="seg" style="width:30.2px;  left:208.9px; top:71.2px;  transform:rotate(-37.5deg)"></i>
+            <i class="seg" style="width:25.4px;  left:235.3px; top:66.2px;  transform:rotate(19.3deg)"></i>
+            <i class="seg" style="width:67.8px;  left:238.1px; top:38.7px;  transform:rotate(-69.2deg)"></i>
+            <!-- dots -->
+            <i class="tdot" style="left:17px;  top:81.8px"></i>
+            <i class="tdot" style="left:41px;  top:86.8px"></i>
+            <i class="tdot" style="left:65px;  top:73.4px"></i>
+            <i class="tdot" style="left:89px;  top:76.8px"></i>
+            <i class="tdot" style="left:113px; top:85.1px"></i>
+            <i class="tdot" style="left:137px; top:63.3px"></i>
+            <i class="tdot" style="left:161px; top:91.9px"></i>
+            <i class="tdot" style="left:185px; top:70.1px"></i>
+            <i class="tdot" style="left:209px; top:78.4px"></i>
+            <i class="tdot" style="left:233px; top:60px"></i>
+            <i class="tdot" style="left:257px; top:68.4px"></i>
+            <i class="tdot now" style="left:279.5px; top:3.5px"></i>
+          </div>
+        </div>
+
+        <!-- biggest transactions -->
+        <div class="card last rise" style="animation-delay:.3s">
+          <h3>Biggest transactions</h3>
+          <div class="txs">
+            <div class="tx">
+              <div class="cat-dot" style="background:#10B98122; color:#10B981">＋</div>
+              <div class="grow"><div class="t">Salary</div><div class="s">Card · today</div></div>
+              <div class="amt tabnum" style="color:var(--income)">+3,000.00</div>
+            </div>
+            <div class="tx">
+              <div class="cat-dot" style="background:#FB718522; color:#FB7185">◍</div>
+              <div class="grow"><div class="t">Health</div><div class="s">pharmacy · 24 Nov</div></div>
+              <div class="amt tabnum" style="color:var(--expense)">−49.50</div>
+            </div>
+            <div class="tx">
+              <div class="cat-dot" style="background:#A78BFA22; color:#A78BFA">◈</div>
+              <div class="grow"><div class="t">Subscriptions · Netflix</div><div class="s">Card · 25 Nov</div></div>
+              <div class="amt tabnum" style="color:var(--expense)">−30.00</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- dock: Reports active -->
+      <div class="dock">
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V21h-6v-6h-6v6H3z"/></svg>Home</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3v18M17 3v18M3 7.5h4M3 12h4M17 12h4M17 16.5h4"/></svg>List</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/></svg>Budgets</div>
+        <div class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20V8"/></svg>Reports</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12"/></svg>Settings</div>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- switcher — obviously not part of the design -->
+  <div class="switcher">
+    <button id="theme" aria-label="toggle theme">☀/☾</button>
+  </div>
+
+<script>
+  var rep = document.getElementById('rep');
+  var themeBtn = document.getElementById('theme');
+  themeBtn.onclick = function () {
+    rep.classList.toggle('light');
+    /* re-run the staggered entrance on every theme change */
+    rep.classList.remove('anim');
+    void rep.offsetWidth; /* force reflow so the animation restarts */
+    rep.classList.add('anim');
+  };
+</script>
+</body>
+</html>

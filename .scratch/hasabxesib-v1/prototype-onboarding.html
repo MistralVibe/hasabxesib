@@ -1,0 +1,328 @@
+<!doctype html>
+<!-- PROTOTYPE — throwaway. Not production code. Not part of the app. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HasabXesib — Onboarding prototype (2 steps)</title>
+<style>
+  :root { --phone-w: 390px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d0d12; color: #e8e8ef;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 28px 16px 120px;
+  }
+  h1 { font-size: 15px; font-weight: 600; opacity: .75; margin-bottom: 6px; letter-spacing: .2px; }
+  .sub { font-size: 13px; opacity: .5; margin-bottom: 22px; }
+
+  .phone { width: var(--phone-w); border-radius: 46px; padding: 10px;
+    background: #1a1a22; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+  .screen {
+    border-radius: 38px; overflow: hidden; position: relative;
+    height: 812px; display: flex; flex-direction: column;
+    /* ---- Dusk A v2 tokens ---- */
+    --bg: #0B0E1A; --surface: #151A2E; --surface2: #1B2140; --text: #EEF0FF; --text2: #8B93B8;
+    --accent: #818CF8; --accent2: #C084FC; --income: #34D399; --expense: #FB7185;
+    --hair: rgba(255,255,255,.07); --ghost-line: rgba(255,255,255,.14);
+    background: var(--bg); color: var(--text);
+  }
+  .screen.light {
+    --bg: #F2F3FB; --surface: #FFFFFF; --surface2: #F4F4FE; --text: #14162B; --text2: #63687F;
+    --accent: #4F46E5; --accent2: #7C3AED; --income: #047857; --expense: #BE123C;
+    --hair: rgba(20,22,43,.08); --ghost-line: rgba(20,22,43,.14);
+  }
+  .statusbar { height: 44px; flex: none; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 26px 6px; font-size: 13px; font-weight: 600; color: var(--text); }
+  .tabnum { font-variant-numeric: tabular-nums; }
+
+  .step { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .step.active { display: flex; }
+  .scroll { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* ---------- rise entrance ---------- */
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .step.active .rise { animation: rise .55s cubic-bezier(.2,.7,.2,1) both; }
+
+  /* ---------- step 1 · currency ---------- */
+  .sky {
+    position: relative; overflow: hidden; padding: 30px 24px 30px;
+    background: linear-gradient(165deg, #181343 0%, #2B2770 48%, #4A2B8F 100%);
+    border-radius: 0 0 36px 36px; color: #F1F0FF;
+  }
+  .light .sky { background: linear-gradient(165deg, #DAE0FF 0%, #E9E8FF 55%, #F6ECFF 100%); color: #171935; }
+  .aurora { position: absolute; border-radius: 999px; pointer-events: none; }
+  .a1 { width: 320px; height: 320px; top: -150px; right: -90px;
+    background: radial-gradient(circle, rgba(129,140,248,.35) 0%, transparent 62%); }
+  .a2 { width: 280px; height: 280px; bottom: -160px; left: -80px;
+    background: radial-gradient(circle, rgba(192,132,252,.3) 0%, transparent 62%); }
+  .light .a1 { background: radial-gradient(circle, rgba(99,102,241,.22) 0%, transparent 62%); }
+  .light .a2 { background: radial-gradient(circle, rgba(168,85,247,.18) 0%, transparent 62%); }
+  .sky .kicker { font-size: 12px; font-weight: 700; letter-spacing: 1.2px; opacity: .65; position: relative; }
+  .sky h2 { font-size: 30px; font-weight: 800; letter-spacing: -1px; line-height: 1.15; margin-top: 10px; position: relative; }
+  .sky p { font-size: 16px; line-height: 1.45; opacity: .8; margin-top: 10px; position: relative; max-width: 300px; }
+
+  .cur-wrap { padding: 20px 18px 12px; }
+  .search {
+    display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 16px;
+    background: var(--surface); border: 1px solid var(--hair); border-radius: 999px;
+    color: var(--text2);
+  }
+  .search input { flex: 1; border: none; outline: none; background: transparent;
+    font: inherit; font-size: 15px; color: var(--text); min-width: 0; }
+  .search input::placeholder { color: var(--text2); }
+
+  .group-head { display: flex; justify-content: space-between; align-items: baseline; margin: 20px 2px 10px; }
+  .group-head span { font-size: 13px; font-weight: 700; color: var(--text2); letter-spacing: .3px; }
+  .cur-list { background: var(--surface); border: 1px solid var(--hair); border-radius: 22px; overflow: hidden; }
+  .cur-row { display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+    border-bottom: 1px solid var(--hair); min-height: 50px; }
+  .cur-row:last-child { border-bottom: none; }
+  .cur-row .code { font-size: 16px; font-weight: 700; letter-spacing: .2px; min-width: 44px; }
+  .cur-row .name { font-size: 13px; color: var(--text2); font-weight: 500; flex: 1; min-width: 0; }
+  .radio { width: 22px; height: 22px; border-radius: 999px; border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center; flex: none; }
+  .radio i { display: none; width: 12px; height: 12px; border-radius: 999px; background: var(--accent); }
+  .cur-row.sel .radio i { display: block; }
+  .cur-row.sel .code { color: var(--accent); }
+
+  .footer { flex: none; padding: 12px 18px 26px; }
+  .btn {
+    display: flex; align-items: center; justify-content: center; height: 54px;
+    border-radius: 999px; font-size: 16px; font-weight: 700; border: none;
+    font-family: inherit; letter-spacing: .1px;
+  }
+  .btn-grad {
+    width: 100%; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    box-shadow: 0 10px 28px rgba(0,0,0,.35);
+    text-shadow: 0 1px 8px rgba(0,0,0,.18);
+  }
+  .light .btn-grad { box-shadow: 0 10px 26px rgba(79,70,229,.35); }
+  .btn-ghost {
+    flex: 1; background: transparent; color: var(--text);
+    border: 1px solid var(--ghost-line);
+  }
+  .btn-pair { display: flex; gap: 12px; }
+  .btn-pair .btn-grad { flex: 1.5; }
+
+  /* ---------- step 2 · budgets ---------- */
+  .band { flex: none; padding: 16px 22px 18px; border-bottom: 1px solid var(--hair); }
+  .band h2 { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
+  .band .cap { font-size: 13px; color: var(--text2); font-weight: 500; margin-top: 5px; }
+  .steps-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+  .pill { height: 6px; border-radius: 999px; background: var(--hair); flex: 1; overflow: hidden; }
+  .pill i { display: block; height: 100%; width: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .steps-row .lbl { font-size: 12px; font-weight: 700; color: var(--text2); letter-spacing: .3px; flex: none; }
+
+  .bud-wrap { padding: 18px; }
+  .bud-list { background: var(--surface); border: 1px solid var(--hair); border-radius: 22px; overflow: hidden; }
+  .bud-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 16px;
+    border-bottom: 1px solid var(--hair); min-height: 66px; }
+  .bud-row:last-child { border-bottom: none; }
+  .cat-dot { width: 38px; height: 38px; border-radius: 999px; flex: none;
+    display: flex; align-items: center; justify-content: center; }
+  .bud-row .nm { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
+  .cap-input {
+    width: 128px; height: 46px; flex: none; text-align: right;
+    background: var(--surface2); border: 1px solid var(--hair); border-radius: 14px;
+    display: flex; align-items: center; justify-content: flex-end; padding: 0 14px;
+    font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .2px;
+  }
+  .bud-note { font-size: 12px; color: var(--text2); padding: 14px 4px 0; line-height: 1.5; }
+
+  /* ---------- floating switcher (NOT part of the design) ---------- */
+  .switcher {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px; z-index: 50;
+    background: #fff; color: #111; border-radius: 999px; padding: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5); font-size: 13px; user-select: none;
+  }
+  .switcher button {
+    border: none; background: transparent; padding: 8px 14px; font-size: 13px;
+    cursor: pointer; border-radius: 999px; font-family: inherit; font-weight: 600;
+  }
+  .switcher button:hover { background: #eee; }
+  .switcher button.on { background: #111; color: #fff; }
+  .switcher button.on:hover { background: #111; }
+
+  @media (max-width: 480px) {
+    body { padding: 0; background: #000; }
+    h1, .sub { display: none; }
+    .phone { width: 100vw; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }
+    .screen { border-radius: 0; height: 100dvh; }
+    .switcher { bottom: max(10px, env(safe-area-inset-bottom)); padding: 4px; }
+  }
+</style>
+</head>
+<body>
+  <h1>HasabXesib — Onboarding prototype</h1>
+  <div class="sub">2 steps · 1/2 buttons flip step · ☀/☾ toggles theme · throwaway mockup, no blur, RN-implementable</div>
+
+  <div class="phone"><div class="screen" id="screen">
+    <div class="statusbar"><span>21:40</span><span>▮▮▮ ᯤ</span></div>
+
+    <!-- ============ STEP 1 · currency ============ -->
+    <div class="step active" id="step1">
+      <div class="scroll">
+        <div class="sky">
+          <div class="aurora a1"></div>
+          <div class="aurora a2"></div>
+          <div class="kicker rise">HASABXESIB</div>
+          <h2 class="rise" style="animation-delay:.06s">Welcome to HasabXesib</h2>
+          <p class="rise" style="animation-delay:.12s">Track spending, budgets and accounts — privately, on your device.</p>
+        </div>
+
+        <div class="cur-wrap">
+          <div class="search rise" style="animation-delay:.18s">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+            <input type="text" placeholder="Search currency" aria-label="Search currency">
+          </div>
+
+          <div class="group-head rise" style="animation-delay:.24s"><span>Popular</span></div>
+          <div class="cur-list rise" style="animation-delay:.3s">
+            <div class="cur-row sel">
+              <span class="code">TMT</span><span class="name">Turkmenistani manat</span>
+              <span class="radio"><i></i></span>
+            </div>
+            <div class="cur-row">
+              <span class="code">USD</span><span class="name">US dollar</span>
+              <span class="radio"><i></i></span>
+            </div>
+            <div class="cur-row">
+              <span class="code">EUR</span><span class="name">Euro</span>
+              <span class="radio"><i></i></span>
+            </div>
+          </div>
+
+          <div class="group-head rise" style="animation-delay:.36s"><span>All currencies</span></div>
+          <div class="cur-list rise" style="animation-delay:.42s">
+            <div class="cur-row">
+              <span class="code">GBP</span><span class="name">Pound sterling</span>
+              <span class="radio"><i></i></span>
+            </div>
+            <div class="cur-row">
+              <span class="code">RUB</span><span class="name">Russian ruble</span>
+              <span class="radio"><i></i></span>
+            </div>
+            <div class="cur-row">
+              <span class="code">TRY</span><span class="name">Turkish lira</span>
+              <span class="radio"><i></i></span>
+            </div>
+            <div class="cur-row">
+              <span class="code">KZT</span><span class="name">Kazakhstani tenge</span>
+              <span class="radio"><i></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer rise" style="animation-delay:.48s">
+        <button class="btn btn-grad">Next</button>
+      </div>
+    </div>
+
+    <!-- ============ STEP 2 · budgets ============ -->
+    <div class="step" id="step2">
+      <div class="band">
+        <h2 class="rise">Set a few budgets</h2>
+        <div class="cap rise" style="animation-delay:.06s">Optional: pick a category and a monthly cap.</div>
+        <div class="steps-row rise" style="animation-delay:.12s">
+          <span class="pill"></span>
+          <span class="pill"><i></i></span>
+          <span class="lbl">Step 2 of 2</span>
+        </div>
+      </div>
+
+      <div class="scroll">
+        <div class="bud-wrap">
+          <div class="bud-list rise" style="animation-delay:.18s">
+            <div class="bud-row">
+              <span class="cat-dot" style="background:rgba(245,158,11,.15); color:#F59E0B">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3"/><path d="M7 13v8"/><path d="M18 3c-1.5 1.5-2 3.5-2 5.5 0 1.8.7 3 2 3.5V21"/></svg>
+              </span>
+              <span class="nm">Food &amp; dining</span>
+              <span class="cap-input">1,000.00</span>
+            </div>
+            <div class="bud-row">
+              <span class="cat-dot" style="background:rgba(251,113,133,.15); color:#FB7185">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21C7 16.5 3.5 13.2 3.5 9.3A4.8 4.8 0 0 1 12 6a4.8 4.8 0 0 1 8.5 3.3c0 3.9-3.5 7.2-8.5 11.7z"/></svg>
+              </span>
+              <span class="nm">Health</span>
+              <span class="cap-input">1,000.00</span>
+            </div>
+            <div class="bud-row">
+              <span class="cat-dot" style="background:rgba(56,189,248,.15); color:#38BDF8">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h2l1.5-9h4L14 17h2"/><circle cx="18" cy="17" r="2"/><circle cx="7.5" cy="6" r="2"/><path d="M3 6h1.5"/><path d="M12 3v5"/></svg>
+              </span>
+              <span class="nm">Transport</span>
+              <span class="cap-input">150.00</span>
+            </div>
+            <div class="bud-row">
+              <span class="cat-dot" style="background:rgba(251,191,36,.15); color:#FBBF24">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="m10 9 5 3-5 3z"/></svg>
+              </span>
+              <span class="nm">Entertainment</span>
+              <span class="cap-input">100.00</span>
+            </div>
+          </div>
+          <div class="bud-note rise" style="animation-delay:.24s">Caps reset on the 1st of each month. You can add or change budgets later.</div>
+        </div>
+      </div>
+
+      <div class="footer rise" style="animation-delay:.3s">
+        <div class="btn-pair">
+          <button class="btn btn-ghost">Skip</button>
+          <button class="btn btn-grad">Start tracking</button>
+        </div>
+      </div>
+    </div>
+
+  </div></div>
+
+  <!-- switcher — obviously not part of the design -->
+  <div class="switcher">
+    <button id="theme" aria-label="toggle theme">☀/☾</button>
+    <button id="s1" class="on" aria-label="step 1">1</button>
+    <button id="s2" aria-label="step 2">2</button>
+  </div>
+
+<script>
+  const el = (id) => document.getElementById(id);
+  const steps = [{ id: 'step1', btn: 's1' }, { id: 'step2', btn: 's2' }];
+
+  function setStep(n) {
+    steps.forEach((s, i) => {
+      const on = i === n - 1;
+      el(s.id).classList.toggle('active', on);
+      el(s.btn).classList.toggle('on', on);
+      if (on) {
+        // restart the rise entrance for the newly shown step
+        el(s.id).querySelectorAll('.rise').forEach((r) => {
+          const d = r.style.animationDelay;
+          r.style.animation = 'none';
+          void r.offsetWidth;
+          r.style.animation = '';
+          r.style.animationDelay = d;
+        });
+      }
+    });
+  }
+  function toggleTheme() {
+    el('screen').classList.toggle('light');
+  }
+  el('s1').onclick = () => setStep(1);
+  el('s2').onclick = () => setStep(2);
+  el('theme').onclick = toggleTheme;
+  document.addEventListener('keydown', (e) => {
+    if (e.target.matches('input, textarea')) return;
+    if (e.key === '1') setStep(1);
+    if (e.key === '2') setStep(2);
+  });
+  setStep(1);
+</script>
+</body>
+</html>

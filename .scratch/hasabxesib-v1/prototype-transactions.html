@@ -1,0 +1,320 @@
+<!-- PROTOTYPE — throwaway. Not production code. Not part of the app. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HasabXesib — Transactions tab mockup</title>
+<style>
+  :root { --phone-w: 390px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d0d12; color: #e8e8ef;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 28px 16px 120px;
+  }
+  h1 { font-size: 15px; font-weight: 600; opacity: .75; margin-bottom: 6px; letter-spacing: .2px; }
+  .sub { font-size: 13px; opacity: .5; margin-bottom: 22px; }
+
+  .phone {
+    width: var(--phone-w); border-radius: 46px; padding: 10px;
+    background: #1a1a22; box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  }
+  .screen {
+    border-radius: 38px; overflow: hidden; position: relative;
+    height: 812px; display: flex; flex-direction: column;
+  }
+  .scroll { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: none; display: flex; flex-direction: column; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* ---------- theme tokens (Dusk A v2 — matches Home mockup) ---------- */
+  .vT {
+    --bg: #0B0E1A; --surface: #151A2E; --surface2: #1B2140; --text: #EEF0FF; --text2: #8B93B8;
+    --accent: #818CF8; --accent2: #C084FC; --income: #34D399; --expense: #FB7185;
+    --hair: rgba(255,255,255,.07);
+    background: var(--bg); color: var(--text);
+  }
+  .vT.light {
+    --bg: #F2F3FB; --surface: #FFFFFF; --surface2: #F4F4FE; --text: #14162B; --text2: #63687F;
+    --accent: #4F46E5; --accent2: #7C3AED; --income: #047857; --expense: #BE123C;
+    --hair: rgba(20,22,43,.08);
+  }
+  .vT { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+  /* status bar strip (mock) */
+  .statusbar { height: 44px; flex: none; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 26px 6px; font-size: 13px; font-weight: 600; color: var(--text); }
+
+  /* ---------- compact dusk header band ---------- */
+  .sky {
+    position: relative; overflow: hidden; padding: 18px 22px 24px;
+    background: linear-gradient(165deg, #181343 0%, #2B2770 48%, #4A2B8F 100%);
+    border-radius: 0 0 28px 28px; color: #F1F0FF; flex: none;
+  }
+  .vT.light .sky {
+    background: linear-gradient(165deg, #DAE0FF 0%, #E9E8FF 55%, #F6ECFF 100%);
+    color: #171935;
+  }
+  .aurora { position: absolute; border-radius: 999px; pointer-events: none; }
+  .a1 { width: 300px; height: 300px; top: -160px; right: -80px;
+    background: radial-gradient(circle, rgba(129,140,248,.35) 0%, transparent 62%); }
+  .a2 { width: 260px; height: 260px; bottom: -150px; left: -90px;
+    background: radial-gradient(circle, rgba(192,132,252,.3) 0%, transparent 62%); }
+  .vT.light .a1 { background: radial-gradient(circle, rgba(99,102,241,.22) 0%, transparent 62%); }
+  .vT.light .a2 { background: radial-gradient(circle, rgba(168,85,247,.18) 0%, transparent 62%); }
+  .skyrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: relative; }
+  .sky h2 { font-size: 30px; font-weight: 800; letter-spacing: -1px; line-height: 1.05; }
+  .mchip { border: 1px solid currentColor; border-radius: 999px; padding: 8px 13px;
+    font-size: 12px; font-weight: 700; letter-spacing: .3px; opacity: .85; flex: none;
+    font-variant-numeric: tabular-nums; }
+  .sky-sub { position: relative; margin-top: 7px; font-size: 13px; font-weight: 600; opacity: .72;
+    font-variant-numeric: tabular-nums; }
+
+  /* ---------- search ---------- */
+  .search {
+    margin: 14px 18px 0; display: flex; align-items: center; gap: 10px; min-height: 48px;
+    background: var(--surface); border: 1px solid var(--hair); border-radius: 999px;
+    padding: 0 18px; flex: none;
+  }
+  .search svg { color: var(--text2); flex: none; }
+  .search input { flex: 1; border: none; outline: none; background: transparent;
+    color: var(--text); font-size: 15px; font-family: inherit; min-width: 0; }
+  .search input::placeholder { color: var(--text2); }
+
+  /* ---------- filter chips: two clearly separated groups ---------- */
+  .fgroup { margin: 14px 18px 0; flex: none; }
+  .flabel { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--text2); margin-bottom: 7px; }
+  .frow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
+    padding: 0 18px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--hair); background: var(--surface); color: var(--text);
+    font-size: 14px; font-weight: 600; font-family: inherit;
+  }
+  .chip.on {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border-color: var(--accent); color: var(--accent); font-weight: 700;
+  }
+
+  /* ---------- grouped list: ONE rounded surface ---------- */
+  .listwrap { margin: 18px 18px 24px; flex: none; }
+  .txlist { background: var(--surface); border: 1px solid var(--hair); border-radius: 22px; overflow: hidden; }
+  .dhead { padding: 13px 16px 5px; font-size: 12px; font-weight: 700; letter-spacing: .3px;
+    color: var(--text2); }
+  .tx { display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    border-bottom: 1px solid var(--hair); }
+  .tx:last-child { border-bottom: none; }
+  .cat-dot { width: 38px; height: 38px; border-radius: 999px; flex: none;
+    display: flex; align-items: center; justify-content: center; }
+  .grow { flex: 1; min-width: 0; }
+  .tx .t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tx .s { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .amt { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; flex: none; }
+  .amt.inc { color: var(--income); }
+  .amt.exp { color: var(--expense); }
+  .tabnum { font-variant-numeric: tabular-nums; }
+
+  /* empty state */
+  .empty { background: var(--surface); border: 1px solid var(--hair); border-radius: 22px;
+    padding: 44px 24px; text-align: center; color: var(--text2); display: none; }
+  .empty .ering { width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface2); border: 1px solid var(--hair); }
+  .empty h3 { font-size: 15px; font-weight: 700; color: var(--text); }
+  .empty p { font-size: 13px; margin-top: 5px; line-height: 1.45; }
+
+  /* ---------- FAB + dock (Home style) ---------- */
+  .fab {
+    position: absolute; right: 18px; bottom: 104px; width: 58px; height: 58px;
+    border-radius: 999px; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 30px; font-weight: 300; z-index: 5;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    box-shadow: 0 8px 24px rgba(0,0,0,.35), 0 10px 28px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .dock {
+    margin: 14px; border-radius: 26px; background: var(--surface);
+    border: 1px solid var(--hair); display: flex; padding: 8px; flex: none;
+    box-shadow: 0 12px 32px rgba(0,0,0,.4);
+  }
+  .vT.light .dock { box-shadow: 0 12px 32px rgba(31,41,85,.12); }
+  .dock div { flex: 1; text-align: center; font-size: 10px; color: var(--text2);
+    padding: 7px 0; border-radius: 18px; }
+  .dock div svg { display: block; margin: 0 auto 3px; opacity: .9; }
+  .dock .on { background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent); font-weight: 700; }
+
+  /* ---------- staggered entrance ---------- */
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .vT.go .rise { animation: rise .55s cubic-bezier(.2,.7,.2,1) both; }
+
+  /* ---------- floating switcher (NOT part of the design) ---------- */
+  .switcher {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px; z-index: 50;
+    background: #fff; color: #111; border-radius: 999px; padding: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5); font-size: 13px; user-select: none;
+  }
+  .switcher button {
+    border: none; background: transparent; padding: 8px 12px; font-size: 13px;
+    cursor: pointer; border-radius: 999px; font-family: inherit;
+  }
+  .switcher button:hover { background: #eee; }
+
+  @media (max-width: 480px) {
+    /* On a real phone: no stage, no frame — the prototype fills the screen. */
+    body { padding: 0; background: #000; }
+    h1, .sub { display: none; }
+    .phone { width: 100vw; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }
+    .screen { border-radius: 0; height: 100dvh; }
+    .switcher { bottom: max(10px, env(safe-area-inset-bottom)); padding: 4px; }
+  }
+</style>
+</head>
+<body>
+  <h1>HasabXesib — Transactions tab mockup</h1>
+  <div class="sub">Dusk A v2 · search + type/month filters (two separate groups — the double-"All" bug is fixed here) · grouped list · throwaway mockup</div>
+
+  <div class="phone"><div class="screen">
+    <div class="vT go" id="vT">
+      <div class="statusbar"><span>21:40</span><span>▮▮▮ ᯤ</span></div>
+
+      <div class="scroll">
+        <!-- compact dusk header band -->
+        <div class="sky">
+          <div class="aurora a1"></div>
+          <div class="aurora a2"></div>
+          <div class="skyrow rise">
+            <h2>Transactions</h2>
+            <span class="mchip">November 2026</span>
+          </div>
+          <div class="sky-sub rise" style="animation-delay:.06s" id="skyCount">6 transactions</div>
+        </div>
+
+        <!-- search -->
+        <div class="search rise" style="animation-delay:.12s">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="q" type="text" placeholder="Search note or amount" autocomplete="off">
+        </div>
+
+        <!-- filter group 1: type -->
+        <div class="fgroup rise" style="animation-delay:.18s">
+          <div class="flabel">Type</div>
+          <div class="frow">
+            <button class="chip on" data-g="type" data-v="all">All</button>
+            <button class="chip" data-g="type" data-v="income">Income</button>
+            <button class="chip" data-g="type" data-v="expense">Expense</button>
+          </div>
+        </div>
+
+        <!-- filter group 2: month -->
+        <div class="fgroup rise" style="animation-delay:.24s">
+          <div class="flabel">Month</div>
+          <div class="frow">
+            <button class="chip on" data-g="month" data-v="all">All months</button>
+            <button class="chip" data-g="month" data-v="nov">Nov 2026</button>
+            <button class="chip" data-g="month" data-v="oct">Oct 2026</button>
+          </div>
+        </div>
+
+        <!-- grouped transaction list -->
+        <div class="listwrap rise" style="animation-delay:.3s">
+          <div class="txlist" id="txlist"></div>
+          <div class="empty" id="empty">
+            <div class="ering">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+            <h3>Nothing found</h3>
+            <p>Try another search or reset the filters.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="fab">＋</div>
+
+      <div class="dock">
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V21h-6v-6h-6v6H3z"/></svg>Home</div>
+        <div class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3v18M17 3v18M3 7.5h4M3 12h4M17 12h4M17 16.5h4"/></svg>List</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/></svg>Budgets</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20V8"/></svg>Reports</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12"/></svg>Settings</div>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- switcher — obviously not part of the design -->
+  <div class="switcher">
+    <button id="theme" aria-label="toggle theme">☀/☾</button>
+  </div>
+
+<script>
+  const el = (id) => document.getElementById(id);
+  const root = el('vT');
+
+  /* category badge icons (inline SVG, stroke currentColor — no emoji) */
+  const ICONS = {
+    salary: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>',
+    food: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/></svg>',
+    subs: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>',
+    transport: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-2.1-5.4A2 2 0 0 0 17.9 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="17" cy="18" r="2"/></svg>',
+    health: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></svg>',
+    housing: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21h-6v-6h-6v6H3z"/></svg>',
+  };
+
+  /* shared sample data (November 2026, TMT) */
+  const TX = [
+    { icon: 'salary', color: '#10B981', title: 'Salary', account: 'Card', amount: 3000, type: 'income', day: 'today', month: 'nov' },
+    { icon: 'food', color: '#F59E0B', title: 'Food & dining', note: 'bazar groceries', account: 'Cash', amount: 85, type: 'expense', day: 'today', month: 'nov' },
+    { icon: 'subs', color: '#A78BFA', title: 'Subscriptions', note: 'Netflix', account: 'Card', amount: 30, type: 'expense', day: 'yesterday', month: 'nov' },
+    { icon: 'transport', color: '#38BDF8', title: 'Transport', account: 'Cash', amount: 12.5, type: 'expense', day: 'yesterday', month: 'nov' },
+    { icon: 'health', color: '#FB7185', title: 'Health', note: 'pharmacy', account: 'Cash', amount: 49.5, type: 'expense', day: 'd24', month: 'nov' },
+    { icon: 'housing', color: '#7E8CC9', title: 'Housing & utilities', account: 'Card', amount: 99, type: 'expense', day: 'd20', month: 'nov' },
+  ];
+  const DAYS = { today: 'Today', yesterday: 'Yesterday', d24: '24 Nov', d20: '20 Nov' };
+
+  const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const state = { type: 'all', month: 'all', q: '' };
+
+  function render() {
+    const list = TX.filter((tx) =>
+      (state.type === 'all' || tx.type === state.type) &&
+      (state.month === 'all' || tx.month === state.month) &&
+      (!state.q || (tx.title + ' ' + (tx.note || '') + ' ' + tx.account + ' ' + fmt(tx.amount)).toLowerCase().includes(state.q))
+    );
+    let html = '', last = null;
+    for (const tx of list) {
+      if (tx.day !== last) { last = tx.day; html += '<div class="dhead">' + DAYS[tx.day] + '</div>'; }
+      const inc = tx.type === 'income';
+      html += '<div class="tx">'
+        + '<div class="cat-dot" style="background:' + tx.color + '22;color:' + tx.color + '">' + ICONS[tx.icon] + '</div>'
+        + '<div class="grow"><div class="t">' + tx.title + (tx.note ? ' · ' + tx.note : '') + '</div><div class="s">' + tx.account + '</div></div>'
+        + '<div class="amt tabnum ' + (inc ? 'inc' : 'exp') + '">' + (inc ? '+' : '−') + fmt(tx.amount) + '</div>'
+        + '</div>';
+    }
+    el('txlist').innerHTML = html;
+    el('txlist').style.display = list.length ? '' : 'none';
+    el('empty').style.display = list.length ? 'none' : 'block';
+    el('skyCount').textContent = list.length + (list.length === 1 ? ' transaction' : ' transactions');
+  }
+
+  document.querySelectorAll('.chip').forEach((ch) => {
+    ch.addEventListener('click', () => {
+      const g = ch.dataset.g, v = ch.dataset.v;
+      state[g] = state[g] === v ? 'all' : v; /* tapping the active chip resets the group */
+      document.querySelectorAll('.chip[data-g="' + g + '"]').forEach((c) => c.classList.toggle('on', c.dataset.v === state[g]));
+      render();
+    });
+  });
+
+  el('q').addEventListener('input', (e) => { state.q = e.target.value.trim().toLowerCase(); render(); });
+
+  el('theme').addEventListener('click', () => {
+    root.classList.toggle('light');
+    root.classList.remove('go'); void root.offsetWidth; root.classList.add('go'); /* replay entrance */
+  });
+
+  render();
+</script>
+</body>
+</html>

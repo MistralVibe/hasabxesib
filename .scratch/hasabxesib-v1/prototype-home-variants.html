@@ -1,0 +1,585 @@
+<!doctype html>
+<!--
+  PROTOTYPE — throwaway. Not production code. Not part of the app.
+
+  Question: "Current design is okay but not wow — what should Home look like?"
+  3 structurally different variants of the HasabXesib Home screen,
+  switchable with the floating bar below the phone (or ← / → keys). Each
+  variant has a light and dark theme (☾ button).
+
+  Constraint this mockup is honest to: Expo Go + no-new-native-deps
+  (ADR-0005) — so NO backdrop blur anywhere; only linear gradients, flat
+  layers, borders and shadows, all reproducible with expo-linear-gradient
+  and RN styles. System fonts only.
+
+  Run: open this file in any browser. No server needed.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HasabXesib — Home prototype (3 variants)</title>
+<style>
+  :root { --phone-w: 390px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d0d12; color: #e8e8ef;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 28px 16px 120px;
+  }
+  h1 { font-size: 15px; font-weight: 600; opacity: .75; margin-bottom: 6px; letter-spacing: .2px; }
+  .sub { font-size: 13px; opacity: .5; margin-bottom: 22px; }
+
+  .phone {
+    width: var(--phone-w); border-radius: 46px; padding: 10px;
+    background: #1a1a22; box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  }
+  .screen {
+    border-radius: 38px; overflow: hidden; position: relative;
+    height: 812px; display: flex; flex-direction: column;
+  }
+  .variant { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .variant.active { display: flex; }
+  .scroll { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* ---------- shared bits ---------- */
+  .fab {
+    position: absolute; right: 18px; bottom: 104px; width: 58px; height: 58px;
+    border-radius: 999px; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 30px; font-weight: 300; z-index: 5;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  }
+  .tabnum { font-variant-numeric: tabular-nums; }
+  .row { display: flex; align-items: center; gap: 12px; }
+  .grow { flex: 1; min-width: 0; }
+  .cat-dot {
+    width: 38px; height: 38px; border-radius: 999px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+  }
+  .chev { opacity: .45; font-size: 18px; }
+
+  /* status bar strip (mock) */
+  .statusbar { height: 44px; flex: none; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 26px 6px; font-size: 13px; font-weight: 600; }
+
+  /* ================= VARIANT A — “Dusk” (v2, elevated) ================= */
+  .vA {
+    --bg: #0B0E1A; --surface: #151A2E; --surface2: #1B2140; --text: #EEF0FF; --text2: #8B93B8;
+    --accent: #818CF8; --accent2: #C084FC; --income: #34D399; --expense: #FB7185;
+    --hair: rgba(255,255,255,.07);
+    background: var(--bg); color: var(--text);
+  }
+  .vA.light {
+    --bg: #F2F3FB; --surface: #FFFFFF; --surface2: #F4F4FE; --text: #14162B; --text2: #63687F;
+    --accent: #4F46E5; --accent2: #7C3AED; --income: #047857; --expense: #BE123C;
+    --hair: rgba(20,22,43,.08);
+  }
+  .vA .statusbar { color: var(--text); }
+  /* — dusk sky hero — */
+  .vA .sky {
+    position: relative; overflow: hidden; padding: 16px 22px 26px;
+    background: linear-gradient(165deg, #181343 0%, #2B2770 48%, #4A2B8F 100%);
+    border-radius: 0 0 36px 36px; color: #F1F0FF;
+  }
+  .vA.light .sky {
+    background: linear-gradient(165deg, #DAE0FF 0%, #E9E8FF 55%, #F6ECFF 100%);
+    color: #171935;
+  }
+  .vA .aurora { position: absolute; border-radius: 999px; pointer-events: none; }
+  .vA .a1 { width: 320px; height: 320px; top: -150px; right: -90px;
+    background: radial-gradient(circle, rgba(129,140,248,.4) 0%, transparent 62%); }
+  .vA .a2 { width: 280px; height: 280px; bottom: -150px; left: -80px;
+    background: radial-gradient(circle, rgba(192,132,252,.32) 0%, transparent 62%); }
+  .vA.light .a1 { background: radial-gradient(circle, rgba(99,102,241,.22) 0%, transparent 62%); }
+  .vA.light .a2 { background: radial-gradient(circle, rgba(168,85,247,.18) 0%, transparent 62%); }
+  .vA .hero-top { display: flex; align-items: center; justify-content: space-between; font-size: 13px;
+    font-weight: 600; opacity: .8; position: relative; }
+  .vA .hero-top .cur-chip { border: 1px solid currentColor; opacity: .9; border-radius: 999px;
+    padding: 3px 10px; font-size: 11px; font-weight: 700; letter-spacing: .4px; }
+  .vA .hero-cap { font-size: 12px; font-weight: 700; letter-spacing: 1.2px; opacity: .65;
+    margin-top: 22px; position: relative; }
+  .vA .hero-balance { font-size: 52px; font-weight: 800; letter-spacing: -2px; margin-top: 6px;
+    font-variant-numeric: tabular-nums; position: relative; line-height: 1;
+    text-shadow: 0 4px 30px rgba(129,140,248,.35); }
+  .vA.light .hero-balance { text-shadow: none; }
+  .vA .hero-balance .cur { font-size: 16px; font-weight: 600; opacity: .6; margin-right: 8px; vertical-align: 22px; letter-spacing: 0; }
+  .vA .delta { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 6px 12px;
+    border-radius: 999px; font-size: 12.5px; font-weight: 700; position: relative;
+    background: rgba(52,211,153,.16); color: #34D399; }
+  .vA.light .delta { background: rgba(4,120,87,.1); color: #047857; }
+  .vA .hero-row { display: flex; align-items: flex-end; justify-content: space-between;
+    margin-top: 26px; position: relative; }
+  .vA .hero-cap2 { font-size: 12px; font-weight: 700; letter-spacing: 1.2px; opacity: .65; }
+  .vA .hero-spent { font-size: 22px; font-weight: 800; margin-top: 5px;
+    font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
+  .vA .hero-of { font-size: 13px; opacity: .65; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .vA .ringwrap { position: relative; width: 104px; height: 104px; flex: none;
+    filter: drop-shadow(0 6px 18px rgba(129,140,248,.35)); }
+  .vA .ringlabel { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; font-size: 10px; opacity: .7; font-weight: 600; }
+  .vA .ringlabel b { font-size: 20px; opacity: 1; font-weight: 800; }
+  /* — budget card (quiet surface; the sky owns the boldness) — */
+  .vA .budgetcard {
+    margin: 18px 18px 0; border-radius: 24px; padding: 18px 20px;
+    background: var(--surface); border: 1px solid var(--hair);
+    box-shadow: 0 14px 34px rgba(0,0,0,.28);
+  }
+  .vA.light .budgetcard { box-shadow: 0 14px 34px rgba(31,41,85,.1); }
+  .vA .budgetcard .cap { font-size: 12px; color: var(--text2); font-weight: 600; }
+  .vA .budgetcard .big { font-size: 24px; font-weight: 800; margin-top: 3px; letter-spacing: -.5px;
+    font-variant-numeric: tabular-nums; }
+  .vA .budgetcard .big em { font-style: normal; color: var(--accent); }
+  .vA .bbar { height: 8px; border-radius: 999px; background: var(--hair); margin-top: 14px; overflow: hidden; }
+  .vA .bbar i { display: block; height: 100%; width: 36%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .vA .bmeta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2);
+    margin-top: 7px; font-variant-numeric: tabular-nums; }
+  .vA section { margin: 24px 18px 0; }
+  .vA .sect { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .vA .sect h2 { font-size: 15px; font-weight: 700; }
+  .vA .sect a { font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 600; }
+  .vA .txlist { background: var(--surface); border-radius: 22px; border: 1px solid var(--hair); overflow: hidden; }
+  .vA .tx { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--hair); }
+  .vA .tx:last-child { border-bottom: none; }
+  .vA .tx .t { font-size: 15px; font-weight: 600; }
+  .vA .tx .s { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .vA .amt { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .vA .fab { background: linear-gradient(135deg, var(--accent), var(--accent2));
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .vA .dock {
+    margin: 14px; border-radius: 26px; background: var(--surface);
+    border: 1px solid var(--hair); display: flex; padding: 8px; flex: none;
+    box-shadow: 0 12px 32px rgba(0,0,0,.4);
+  }
+  .vA.light .dock { box-shadow: 0 12px 32px rgba(31,41,85,.12); }
+  .vA .dock div { flex: 1; text-align: center; font-size: 10px; color: var(--text2);
+    padding: 7px 0; border-radius: 18px; }
+  .vA .dock div svg { display: block; margin: 0 auto 3px; opacity: .9; }
+  .vA .dock .on { background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent); font-weight: 700; }
+  /* — one orchestrated entrance: sky first, then content rises — */
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .vA.active .rise { animation: rise .55s cubic-bezier(.2,.7,.2,1) both; }
+  .vA.active .rise:nth-child(2) { animation-delay: .06s; }
+  .vA.active .rise:nth-child(3) { animation-delay: .12s; }
+  .vA.active .rise:nth-child(4) { animation-delay: .18s; }
+  .vA.active .rise:nth-child(5) { animation-delay: .24s; }
+  .vA.active .rise:nth-child(6) { animation-delay: .3s; }
+
+  /* ================= VARIANT B — “Ledger” ================= */
+  .vB {
+    --bg: #FAFAF7; --text: #111318; --text2: #6B7280; --hair: #E2E2DA;
+    --accent: #027A48; --income: #027A48; --expense: #B42318;
+    background: var(--bg); color: var(--text);
+  }
+  .vB.dark {
+    --bg: #101210; --text: #F2F2EC; --text2: #9A9F92; --hair: #26292422;
+    --hair: rgba(242,242,236,.12); --accent: #6EE7A8; --income: #6EE7A8; --expense: #F87171;
+    background: var(--bg);
+  }
+  .vB .statusbar { color: var(--text); }
+  .vB .head { padding: 16px 24px 0; display: flex; justify-content: space-between; font-size: 13px; color: var(--text2); }
+  .vB .masthead { padding: 26px 24px 0; }
+  .vB .masthead .cap { font-size: 13px; color: var(--text2); }
+  .vB .big { font-size: 64px; font-weight: 750; letter-spacing: -3px; line-height: 1.02;
+    font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .vB .big .cur { font-size: 18px; font-weight: 600; color: var(--text2); letter-spacing: 0; margin-right: 10px; }
+  .vB .moverow { display: flex; gap: 18px; padding: 14px 24px 0; font-size: 13px; color: var(--text2); }
+  .vB .moverow b { color: var(--text); font-weight: 600; }
+  .vB .rule { margin: 22px 24px; border-top: 2px solid var(--text); }
+  .vB .strip { padding: 0 24px; }
+  .vB .strip .bar { height: 26px; display: flex; border-radius: 4px; overflow: hidden; }
+  .vB .strip .bar i { display: block; height: 100%; }
+  .vB .strip .legend { display: flex; gap: 14px; font-size: 12px; color: var(--text2); margin-top: 8px; flex-wrap: wrap; }
+  .vB .strip .legend em { font-style: normal; }
+  .vB .strip .legend .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .vB table { width: calc(100% - 48px); margin: 8px 24px 24px; border-collapse: collapse; font-size: 14px; }
+  .vB td { padding: 11px 0; border-bottom: 1px solid var(--hair); vertical-align: middle; }
+  .vB td.date { color: var(--text2); font-size: 12px; width: 74px; }
+  .vB td.cat { font-weight: 600; }
+  .vB td.cat .dot { display: inline-block; width: 8px; height: 8px; border-radius: 999px; margin-right: 8px; }
+  .vB td.cat .note { display: block; font-size: 11px; color: var(--text2); font-weight: 400; margin-top: 1px; }
+  .vB td.amt { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .vB .fab {
+    background: var(--bg); color: var(--text); border: 1.5px solid var(--text);
+    box-shadow: none; border-radius: 18px; font-weight: 400;
+  }
+  .vB .tabs { display: flex; border-top: 1.5px solid var(--text); flex: none; background: var(--bg); }
+  .vB .tabs div { flex: 1; text-align: center; padding: 12px 0 18px; font-size: 11px;
+    letter-spacing: .4px; color: var(--text2); }
+  .vB .tabs .on { color: var(--text); font-weight: 700; text-decoration: underline; text-underline-offset: 5px; }
+
+  /* ================= VARIANT C — “Vault” ================= */
+  .vC {
+    --bg: #0A0E0D; --surface: #101614; --surface2: #16201C; --text: #E9F2EE; --text2: #7E8C86;
+    --accent: #34D399; --accentDeep: #0BA360; --income: #34D399; --expense: #F87171;
+    --hair: rgba(233,242,238,.07);
+    background: var(--bg); color: var(--text);
+  }
+  .vC.light {
+    --bg: #F3F6F4; --surface: #FFFFFF; --surface2: #EDF3EF; --text: #0C1512; --text2: #5B6B64;
+    --accent: #067647; --accentDeep: #0B7A55; --income: #067647; --expense: #C2372C;
+    --hair: rgba(12,21,18,.08);
+    background: var(--bg);
+  }
+  .vC .statusbar { color: var(--text); }
+  .vC .top { padding: 14px 20px 0; display: flex; justify-content: space-between; align-items: center; }
+  .vC .top .brand { font-weight: 800; font-size: 17px; letter-spacing: -.3px; }
+  .vC .top .brand .dot { color: var(--accent); }
+  .vC .vaultcard {
+    margin: 16px 18px 0; border-radius: 26px; padding: 22px;
+    background: var(--surface); border: 1px solid var(--hair); position: relative; overflow: hidden;
+  }
+  .vC .vaultcard::before {
+    content: ""; position: absolute; top: -70px; right: -50px; width: 240px; height: 240px; border-radius: 999px;
+    background: radial-gradient(circle, var(--accentDeep) 0%, transparent 65%); opacity: .22;
+  }
+  .vC .vaultcard .cap { font-size: 12px; font-weight: 600; color: var(--text2); letter-spacing: .3px; }
+  .vC .vaultcard .big { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; margin-top: 6px;
+    font-variant-numeric: tabular-nums; position: relative; }
+  .vC .quickstats { display: flex; gap: 10px; margin: 14px 18px 0; }
+  .vC .qs { flex: 1; background: var(--surface2); border-radius: 18px; padding: 12px 14px; border: 1px solid var(--hair); }
+  .vC .qs .l { font-size: 11px; color: var(--text2); font-weight: 600; }
+  .vC .qs .v { font-size: 16px; font-weight: 700; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .vC .qs .v.neg { color: var(--expense); }
+  .vC section { margin: 22px 18px 0; }
+  .vC .sect { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .vC .sect h2 { font-size: 14px; font-weight: 700; letter-spacing: .2px; }
+  .vC .sect a { font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 600; }
+  .vC .budgetcard { background: var(--surface); border: 1px solid var(--hair); border-radius: 22px; padding: 4px 16px; }
+  .vC .brow { padding: 13px 0; border-bottom: 1px solid var(--hair); }
+  .vC .brow:last-child { border-bottom: none; }
+  .vC .brow .l1 { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 7px; }
+  .vC .brow .l1 b { font-weight: 600; }
+  .vC .brow .l1 span { color: var(--text2); font-variant-numeric: tabular-nums; }
+  .vC .btrack { height: 6px; border-radius: 999px; background: var(--hair); overflow: hidden; }
+  .vC .btrack i { display: block; height: 100%; border-radius: 999px; }
+  .vC .txlist { background: var(--surface); border: 1px solid var(--hair); border-radius: 22px; overflow: hidden; }
+  .vC .tx { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--hair); }
+  .vC .tx:last-child { border-bottom: none; }
+  .vC .tx .t { font-size: 14px; font-weight: 600; }
+  .vC .tx .s { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .vC .amt { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .vC .fab { background: var(--accent); color: #06231A; box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 40%, transparent); }
+  .vC.light .fab { color: #fff; }
+  .vC .dock { margin: 14px; border-radius: 999px; background: var(--surface2); border: 1px solid var(--hair);
+    display: flex; padding: 8px; flex: none; }
+  .vC .dock div { flex: 1; text-align: center; font-size: 10px; color: var(--text2); padding: 6px 0; border-radius: 999px; }
+  .vC .dock .on { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); font-weight: 700; }
+
+  /* ---------- floating switcher (NOT part of the design) ---------- */
+  @media (max-width: 480px) {
+    /* On a real phone: no stage, no frame — the prototype fills the screen. */
+    body { padding: 0; background: #000; }
+    h1, .sub { display: none; }
+    .phone { width: 100vw; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }
+    .screen { border-radius: 0; height: 100dvh; }
+    .switcher { bottom: max(10px, env(safe-area-inset-bottom)); padding: 4px; }
+  }
+  .switcher {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px; z-index: 50;
+    background: #fff; color: #111; border-radius: 999px; padding: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5); font-size: 13px; user-select: none;
+  }
+  .switcher button {
+    border: none; background: transparent; padding: 8px 12px; font-size: 13px;
+    cursor: pointer; border-radius: 999px; font-family: inherit;
+  }
+  .switcher button:hover { background: #eee; }
+  .switcher .lbl { font-weight: 700; min-width: 130px; text-align: center; }
+</style>
+</head>
+<body>
+  <h1>HasabXesib — Home screen prototype</h1>
+  <div class="sub">3 structurally different directions · ← → to flip · ☀/☾ toggles theme · throwaway mockup, no blur, RN-implementable</div>
+
+  <div class="phone"><div class="screen" id="screen">
+
+    <!-- ============ VARIANT A ============ -->
+    <div class="variant vA active" id="vA">
+      <div class="statusbar"><span>21:40</span><span>▮▮▮ ᯤ</span></div>
+      <div class="scroll">
+        <div class="sky">
+          <div class="aurora a1"></div>
+          <div class="aurora a2"></div>
+          <div class="hero-top rise"><span id="greeting">Good evening</span><span class="cur-chip">TMT</span></div>
+          <div class="hero-cap rise" style="animation-delay:.06s">TOTAL BALANCE</div>
+          <div class="hero-balance tabnum rise" style="animation-delay:.12s"><span class="cur">TMT</span><span id="balanceBig">0.00</span></div>
+          <div class="delta rise" style="animation-delay:.18s">▲ +2,587.50 this month</div>
+          <div class="hero-row rise" style="animation-delay:.24s">
+            <div>
+              <div class="hero-cap2">SPENT THIS MONTH</div>
+              <div class="hero-spent tabnum">TMT 412.50</div>
+              <div class="hero-of tabnum">of 1,200.00 budget</div>
+            </div>
+            <div class="ringwrap">
+              <svg width="104" height="104" viewBox="0 0 104 104">
+                <circle cx="52" cy="52" r="44" fill="none" stroke="currentColor" stroke-width="10" opacity=".16"/>
+                <circle cx="52" cy="52" r="44" fill="none" stroke="url(#gA)" stroke-width="10" stroke-linecap="round"
+                        stroke-dasharray="276.5" stroke-dashoffset="182.5" transform="rotate(-90 52 52)"/>
+                <defs><linearGradient id="gA" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#818CF8"/><stop offset="1" stop-color="#C084FC"/>
+                </linearGradient></defs>
+              </svg>
+              <div class="ringlabel"><b>34%</b>of budget</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="budgetcard rise" style="animation-delay:.3s">
+          <div class="cap">Budget · Health</div>
+          <div class="big"><em>TMT 640.00</em> left</div>
+          <div class="bbar"><i></i></div>
+          <div class="bmeta"><span>360.00 of 1,000.00</span><span>36% used</span></div>
+        </div>
+
+        <section class="rise" style="animation-delay:.36s">
+          <div class="sect"><h2>Recent</h2><a>See all</a></div>
+          <div class="txlist">
+            <div class="tx">
+              <div class="cat-dot" style="background:#05966922; color:#10B981">＋</div>
+              <div class="grow"><div class="t">Salary</div><div class="s">Card · today</div></div>
+              <div class="amt tabnum" style="color:var(--income)">+3,000.00</div>
+            </div>
+            <div class="tx">
+              <div class="cat-dot" style="background:#F59E0B22; color:#F59E0B">◍</div>
+              <div class="grow"><div class="t">Food &amp; dining</div><div class="s">Cash · today</div></div>
+              <div class="amt tabnum" style="color:var(--expense)">−85.00</div>
+            </div>
+            <div class="tx">
+              <div class="cat-dot" style="background:#8B5CF622; color:#A78BFA">◈</div>
+              <div class="grow"><div class="t">Subscriptions · Netflix</div><div class="s">Card · 25 Nov</div></div>
+              <div class="amt tabnum" style="color:var(--expense)">−30.00</div>
+            </div>
+            <div class="tx">
+              <div class="cat-dot" style="background:#0EA5E922; color:#38BDF8">↗</div>
+              <div class="grow"><div class="t">Transport</div><div class="s">Cash · 25 Nov</div></div>
+              <div class="amt tabnum" style="color:var(--expense)">−12.50</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="rise" style="animation-delay:.42s; margin-bottom:24px">
+          <div class="sect"><h2>Upcoming recurring</h2><a>See all</a></div>
+          <div class="txlist">
+            <div class="tx">
+              <div class="cat-dot" style="background:#8B5CF622; color:#A78BFA">◈</div>
+              <div class="grow"><div class="t">Netflix</div><div class="s">Due 5 Dec · monthly</div></div>
+              <div class="amt tabnum" style="color:var(--expense)">−30.00</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="fab">＋</div>
+      <div class="dock">
+        <div class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V21h-6v-6h-6v6H3z"/></svg>Home</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3v18M17 3v18M3 7.5h4M3 12h4M17 12h4M17 16.5h4"/></svg>List</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/></svg>Budgets</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20V8"/></svg>Reports</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12"/></svg>Settings</div>
+      </div>
+    </div>
+
+    <!-- ============ VARIANT B ============ -->
+    <div class="variant vB" id="vB">
+      <div class="statusbar"><span>21:40</span><span>▮▮▮ ᯤ</span></div>
+      <div class="scroll">
+        <div class="head"><span>Home</span><span class="tabnum">26 November 2026</span></div>
+
+        <div class="masthead">
+          <div class="cap">Total balance</div>
+          <div class="big"><span class="cur">TMT</span>2,955.00</div>
+        </div>
+        <div class="moverow tabnum">
+          <span>Spent this month <b>412.50</b></span>
+          <span>of <b>1,200.00</b> budget</span>
+          <span style="color:var(--income)">▲ +3,000 in</span>
+        </div>
+
+        <div class="rule"></div>
+
+        <div class="strip">
+          <div class="bar">
+            <i style="width:38%; background:#0E9F6E"></i>
+            <i style="width:24%; background:#7E8CC9"></i>
+            <i style="width:16%; background:#D97706"></i>
+            <i style="width:12%; background:#C2372C"></i>
+            <i style="width:10%; background:#9CA3AF"></i>
+          </div>
+          <div class="legend tabnum">
+            <em><span class="sw" style="background:#0E9F6E"></span>Food 156.80</em>
+            <em><span class="sw" style="background:#7E8CC9"></span>Housing 99.00</em>
+            <em><span class="sw" style="background:#D97706"></span>Transport 66.20</em>
+            <em><span class="sw" style="background:#C2372C"></span>Health 49.50</em>
+            <em><span class="sw" style="background:#9CA3AF"></span>Other 41.00</em>
+          </div>
+        </div>
+
+        <table>
+          <tr>
+            <td class="date tabnum">Today</td>
+            <td class="cat"><span class="dot" style="background:#0E9F6E"></span>Food &amp; dining<span class="note">bazar groceries</span></td>
+            <td class="amt" style="color:var(--expense)">−85.00</td>
+          </tr>
+          <tr>
+            <td class="date tabnum">Today</td>
+            <td class="cat"><span class="dot" style="background:#0E9F6E"></span>Salary<span class="note">Card</span></td>
+            <td class="amt" style="color:var(--income)">+3,000.00</td>
+          </tr>
+          <tr>
+            <td class="date tabnum">25 Nov</td>
+            <td class="cat"><span class="dot" style="background:#7E8CC9"></span>Subscriptions<span class="note">Netflix · Card</span></td>
+            <td class="amt" style="color:var(--expense)">−30.00</td>
+          </tr>
+          <tr>
+            <td class="date tabnum">25 Nov</td>
+            <td class="cat"><span class="dot" style="background:#D97706"></span>Transport<span class="note">Cash</span></td>
+            <td class="amt" style="color:var(--expense)">−12.50</td>
+          </tr>
+          <tr>
+            <td class="date tabnum">24 Nov</td>
+            <td class="cat"><span class="dot" style="background:#C2372C"></span>Health<span class="note">pharmacy</span></td>
+            <td class="amt" style="color:var(--expense)">−49.50</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="fab">＋</div>
+      <div class="tabs">
+        <div class="on">Home</div><div>Transactions</div><div>Budgets</div><div>Reports</div><div>Settings</div>
+      </div>
+    </div>
+
+    <!-- ============ VARIANT C ============ -->
+    <div class="variant vC" id="vC">
+      <div class="statusbar"><span>21:40</span><span>▮▮▮ ᯤ</span></div>
+      <div class="scroll">
+        <div class="top"><div class="brand">hasab<span class="dot">·</span>xesib</div><div style="font-size:12px; color:var(--text2)">TMT</div></div>
+
+        <div class="vaultcard">
+          <div class="cap">TOTAL BALANCE</div>
+          <div class="big">2,955.00</div>
+          <div style="font-size:12px; color:var(--text2); margin-top:6px; position:relative">2 accounts · updated just now</div>
+        </div>
+
+        <div class="quickstats">
+          <div class="qs"><div class="l">TODAY</div><div class="v neg tabnum">−42.50</div></div>
+          <div class="qs"><div class="l">THIS WEEK</div><div class="v neg tabnum">−180.00</div></div>
+          <div class="qs"><div class="l">THIS MONTH</div><div class="v neg tabnum">−412.50</div></div>
+        </div>
+
+        <section>
+          <div class="sect"><h2>Budgets · November</h2><a>See all</a></div>
+          <div class="budgetcard tabnum">
+            <div class="brow">
+              <div class="l1"><b>Food &amp; dining</b><span>360.00 of 1,000.00</span></div>
+              <div class="btrack"><i style="width:36%; background:var(--accent)"></i></div>
+            </div>
+            <div class="brow">
+              <div class="l1"><b>Transport</b><span>66.20 of 150.00</span></div>
+              <div class="btrack"><i style="width:44%; background:var(--accent)"></i></div>
+            </div>
+            <div class="brow">
+              <div class="l1"><b>Entertainment</b><span>85.00 of 100.00</span></div>
+              <div class="btrack"><i style="width:85%; background:#FBBF24"></i></div>
+            </div>
+          </div>
+        </section>
+
+        <section style="margin-bottom:24px">
+          <div class="sect"><h2>Recent</h2><a>See all</a></div>
+          <div class="txlist">
+            <div class="tx">
+              <div class="cat-dot" style="background:#10B98122; color:#10B981">＋</div>
+              <div class="grow"><div class="t">Salary</div><div class="s">Card · today</div></div>
+              <div class="amt" style="color:var(--income)">+3,000.00</div>
+            </div>
+            <div class="tx">
+              <div class="cat-dot" style="background:#F59E0B22; color:#F59E0B">◍</div>
+              <div class="grow"><div class="t">Food &amp; dining</div><div class="s">Cash · today</div></div>
+              <div class="amt" style="color:var(--expense)">−85.00</div>
+            </div>
+            <div class="tx">
+              <div class="cat-dot" style="background:#A78BFA22; color:#A78BFA">◈</div>
+              <div class="grow"><div class="t">Subscriptions</div><div class="s">Card · 25 Nov</div></div>
+              <div class="amt" style="color:var(--expense)">−30.00</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="fab">＋</div>
+      <div class="dock">
+        <div class="on">Home</div><div>List</div><div>Budgets</div><div>Reports</div><div>Settings</div>
+      </div>
+    </div>
+
+  </div></div>
+
+  <!-- switcher — obviously not part of the design -->
+  <div class="switcher">
+    <button id="prev" aria-label="previous variant">←</button>
+    <span class="lbl" id="lbl">A · Dusk</span>
+    <button id="next" aria-label="next variant">→</button>
+    <button id="theme" aria-label="toggle theme">☀/☾</button>
+  </div>
+
+<script>
+  const variants = [
+    { id: 'vA', name: 'A · Dusk' },
+    { id: 'vB', name: 'B · Ledger' },
+    { id: 'vC', name: 'C · Vault' },
+  ];
+  let idx = 0;
+  const el = (id) => document.getElementById(id);
+
+  function apply() {
+    variants.forEach(v => el(v.id).classList.remove('active'));
+    el(variants[idx].id).classList.add('active');
+    el('lbl').textContent = variants[idx].name;
+    const url = new URL(location);
+    url.searchParams.set('variant', variants[idx].id);
+    history.replaceState(null, '', url);
+    if (variants[idx].id === 'vA') enterA();
+  }
+  /* Variant A entrance: time-of-day greeting + balance count-up.
+     In RN this maps to the built-in Animated API — no reanimated needed. */
+  function enterA() {
+    const h = new Date().getHours();
+    const g = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    el('greeting').textContent = g + ' · 26 November';
+    const target = 2955, dur = 900, t0 = performance.now();
+    const out = el('balanceBig');
+    const fmt = (v) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const tick = (t) => {
+      const p = Math.min((t - t0) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      out.textContent = fmt(target * e);
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+  function flip(d) { idx = (idx + d + variants.length) % variants.length; apply(); }
+  function toggleTheme() {
+    variants.forEach(v => el(v.id).classList.toggle('light'));
+  }
+  el('prev').onclick = () => flip(-1);
+  el('next').onclick = () => flip(1);
+  el('theme').onclick = toggleTheme;
+  document.addEventListener('keydown', (e) => {
+    if (e.target.matches('input, textarea, [contenteditable]')) return;
+    if (e.key === 'ArrowLeft') flip(-1);
+    if (e.key === 'ArrowRight') flip(1);
+  });
+  const fromUrl = new URLSearchParams(location.search).get('variant');
+  const found = variants.findIndex(v => v.id === fromUrl);
+  if (found >= 0) idx = found;
+  apply();
+</script>
+</body>
+</html>

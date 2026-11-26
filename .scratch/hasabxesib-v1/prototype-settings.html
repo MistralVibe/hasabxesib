@@ -1,0 +1,335 @@
+<!doctype html>
+<!-- PROTOTYPE — throwaway. Not production code. Not part of the app. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HasabXesib — Settings mockup</title>
+<style>
+  :root { --phone-w: 390px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d0d12; color: #e8e8ef;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 28px 16px 120px;
+  }
+  h1 { font-size: 15px; font-weight: 600; opacity: .75; margin-bottom: 6px; letter-spacing: .2px; }
+  .sub { font-size: 13px; opacity: .5; margin-bottom: 22px; }
+
+  .phone { width: var(--phone-w); border-radius: 46px; padding: 10px;
+    background: #1a1a22; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+  .screen { border-radius: 38px; overflow: hidden; position: relative;
+    height: 812px; display: flex; flex-direction: column; }
+
+  /* ---------- Dusk A v2 tokens ---------- */
+  .app {
+    --bg: #0B0E1A; --surface: #151A2E; --surface2: #1B2140; --text: #EEF0FF; --text2: #8B93B8;
+    --accent: #818CF8; --accent2: #C084FC; --warning: #FBBF24;
+    --hair: rgba(255,255,255,.07);
+    --accentSoft: rgba(129,140,248,.14);
+    background: var(--bg); color: var(--text);
+    flex: 1; min-height: 0; display: flex; flex-direction: column;
+  }
+  .app.light {
+    --bg: #F2F3FB; --surface: #FFFFFF; --surface2: #F4F4FE; --text: #14162B; --text2: #63687F;
+    --accent: #4F46E5; --accent2: #7C3AED; --warning: #B45309;
+    --hair: rgba(20,22,43,.08);
+    --accentSoft: rgba(79,70,229,.09);
+  }
+  .app .statusbar { color: var(--text); height: 44px; flex: none; display: flex; align-items: flex-end;
+    justify-content: space-between; padding: 0 26px 6px; font-size: 13px; font-weight: 600; }
+  .scroll { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* ---------- compact dusk header band ---------- */
+  .band { position: relative; overflow: hidden; padding: 10px 22px 24px;
+    background: linear-gradient(165deg, #181343 0%, #2B2770 48%, #4A2B8F 100%);
+    border-radius: 0 0 36px 36px; color: #F1F0FF; }
+  .app.light .band { background: linear-gradient(165deg, #DAE0FF 0%, #E9E8FF 55%, #F6ECFF 100%); color: #171935; }
+  .aurora { position: absolute; border-radius: 999px; pointer-events: none; }
+  .a1 { width: 300px; height: 300px; top: -170px; right: -80px;
+    background: radial-gradient(circle, rgba(129,140,248,.35) 0%, transparent 62%); }
+  .a2 { width: 260px; height: 260px; bottom: -160px; left: -70px;
+    background: radial-gradient(circle, rgba(192,132,252,.3) 0%, transparent 62%); }
+  .app.light .a1 { background: radial-gradient(circle, rgba(99,102,241,.22) 0%, transparent 62%); }
+  .app.light .a2 { background: radial-gradient(circle, rgba(168,85,247,.18) 0%, transparent 62%); }
+  .band h2 { position: relative; font-size: 30px; font-weight: 800; letter-spacing: -1px; }
+  .band .who { position: relative; font-size: 13px; font-weight: 600; opacity: .7; margin-top: 4px; }
+
+  /* ---------- sections & cards ---------- */
+  section { margin: 20px 18px 0; }
+  .sect { font-size: 12px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase;
+    color: var(--text2); margin-bottom: 10px; }
+  .card { background: var(--surface); border: 1px solid var(--hair); border-radius: 24px;
+    padding: 16px 18px; box-shadow: 0 14px 34px rgba(0,0,0,.28); }
+  .app.light .card { box-shadow: 0 14px 34px rgba(31,41,85,.1); }
+  .cap { font-size: 13px; color: var(--text2); font-weight: 600; }
+
+  /* segmented control */
+  .seg { display: flex; margin-top: 8px; background: var(--surface2); border: 1px solid var(--hair);
+    border-radius: 999px; padding: 4px; }
+  .seg button { flex: 1; border: none; background: transparent; font-family: inherit;
+    font-size: 14px; font-weight: 600; color: var(--text2); padding: 10px 0;
+    border-radius: 999px; cursor: pointer; min-height: 40px; }
+  .seg button.on { background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; font-weight: 700; }
+
+  /* language chips */
+  .chips { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--hair); background: var(--surface2); color: var(--text);
+    font-family: inherit; font-size: 14px; font-weight: 600; border-radius: 999px;
+    padding: 12px 20px; min-height: 44px; cursor: pointer; }
+  .chip.on { background: var(--accentSoft); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .currline { font-size: 13px; color: var(--text2); margin-top: 14px; }
+  .currline b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* manage rows */
+  .mrow { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 15px 2px; min-height: 52px; border-radius: 14px; cursor: pointer; }
+  .mrow:active { background: var(--accentSoft); }
+  .mrow + .mrow { border-top: 1px solid var(--hair); }
+  .mrow .t { font-size: 16px; font-weight: 600; }
+  .mrow svg { flex: none; color: var(--text2); }
+
+  /* toggle switch */
+  .sw { flex: none; width: 52px; height: 32px; border-radius: 999px; background: var(--surface2);
+    border: 1px solid var(--hair); position: relative; cursor: pointer; transition: background .18s; }
+  .sw i { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 999px;
+    background: var(--text2); transition: transform .18s, background .18s; }
+  .sw.on { background: var(--accent); border-color: transparent; }
+  .sw.on i { transform: translateX(20px); background: #fff; }
+
+  /* setting rows with caption */
+  .srow { display: flex; align-items: center; gap: 14px; }
+  .srow .grow { flex: 1; min-width: 0; }
+  .srow .t { font-size: 16px; font-weight: 600; }
+  .srow .s { font-size: 13px; color: var(--text2); margin-top: 3px; line-height: 1.35; }
+
+  /* data buttons */
+  .datacol { display: flex; flex-direction: column; gap: 10px; }
+  .btn { border: none; font-family: inherit; font-size: 15px; font-weight: 700;
+    background: var(--accentSoft); color: var(--accent); border-radius: 999px;
+    padding: 13px 18px; min-height: 46px; cursor: pointer; }
+  .btn:active { filter: brightness(1.15); }
+  .import-sep { border-top: 1px solid var(--hair); margin: 14px 0 0; padding-top: 14px; }
+  .warn { font-size: 12.5px; color: var(--warning); font-weight: 600; margin: 8px 4px 0; line-height: 1.35; }
+
+  /* about */
+  .about { display: flex; align-items: center; justify-content: space-between; }
+  .about .t { font-size: 16px; font-weight: 700; }
+  .about .s { font-size: 13px; color: var(--text2); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .leaf { width: 38px; height: 38px; border-radius: 999px; flex: none; display: flex; align-items: center;
+    justify-content: center; background: var(--accentSoft); color: var(--accent); }
+
+  /* ---------- dock ---------- */
+  .dock { margin: 14px; border-radius: 26px; background: var(--surface); border: 1px solid var(--hair);
+    display: flex; padding: 8px; flex: none; box-shadow: 0 12px 32px rgba(0,0,0,.4); }
+  .app.light .dock { box-shadow: 0 12px 32px rgba(31,41,85,.12); }
+  .dock div { flex: 1; text-align: center; font-size: 10px; color: var(--text2);
+    padding: 7px 0; border-radius: 18px; }
+  .dock div svg { display: block; margin: 0 auto 3px; opacity: .9; }
+  .dock .on { background: var(--accentSoft); color: var(--accent); font-weight: 700; }
+
+  /* ---------- entrance ---------- */
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .app.anim .rise { animation: rise .55s cubic-bezier(.2,.7,.2,1) both; }
+
+  /* ---------- floating bar (NOT part of the design) ---------- */
+  .switcher { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px; z-index: 50;
+    background: #fff; color: #111; border-radius: 999px; padding: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5); font-size: 13px; user-select: none; }
+  .switcher button { border: none; background: transparent; padding: 8px 14px; font-size: 13px;
+    cursor: pointer; border-radius: 999px; font-family: inherit; }
+  .switcher button:hover { background: #eee; }
+
+  @media (max-width: 480px) {
+    body { padding: 0; background: #000; }
+    h1, .sub { display: none; }
+    .phone { width: 100vw; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }
+    .screen { border-radius: 0; height: 100dvh; }
+    .switcher { bottom: max(10px, env(safe-area-inset-bottom)); padding: 4px; }
+  }
+</style>
+</head>
+<body>
+  <h1>HasabXesib — Settings screen mockup</h1>
+  <div class="sub">Dusk A v2 · ☀/☾ toggles theme · controls are clickable · throwaway mockup, no blur, RN-implementable</div>
+
+  <div class="phone"><div class="screen">
+    <div class="app anim" id="app">
+      <div class="statusbar"><span>21:40</span><span>▮▮▮ ᯤ</span></div>
+      <div class="scroll">
+
+        <!-- dusk header band -->
+        <div class="band rise" style="animation-delay:0s">
+          <div class="aurora a1"></div><div class="aurora a2"></div>
+          <h2>Settings</h2>
+          <div class="who">Appearance, security &amp; your data</div>
+        </div>
+
+        <!-- Appearance -->
+        <section class="rise" style="animation-delay:.06s">
+          <div class="sect">Appearance</div>
+          <div class="card">
+            <div class="cap">Theme</div>
+            <div class="seg" id="segTheme">
+              <button data-mode="system">System</button>
+              <button data-mode="light">Light</button>
+              <button data-mode="dark" class="on">Dark</button>
+            </div>
+            <div class="cap" style="margin-top:16px">Language</div>
+            <div class="chips" id="chipsLang">
+              <button class="chip on">English</button>
+              <button class="chip">Русский</button>
+            </div>
+            <div class="currline">Currency display: <b>TMT (0.00)</b></div>
+          </div>
+        </section>
+
+        <!-- Manage -->
+        <section class="rise" style="animation-delay:.12s">
+          <div class="sect">Manage</div>
+          <div class="card" style="padding:6px 16px">
+            <div class="mrow">
+              <div class="t">Accounts &amp; transfers</div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+            <div class="mrow">
+              <div class="t">Recurring payments</div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+          </div>
+        </section>
+
+        <!-- Security -->
+        <section class="rise" style="animation-delay:.18s">
+          <div class="sect">Security</div>
+          <div class="card">
+            <div class="srow">
+              <div class="grow">
+                <div class="t">App lock</div>
+                <div class="s">Require Face ID, fingerprint or PIN to open the app.</div>
+              </div>
+              <div class="sw on" id="swLock" role="switch" aria-checked="true"><i></i></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Reminders -->
+        <section class="rise" style="animation-delay:.24s">
+          <div class="sect">Reminders</div>
+          <div class="card">
+            <div class="srow">
+              <div class="grow">
+                <div class="t">Daily reminder</div>
+                <div class="s">Take a minute to record daily expenses.</div>
+              </div>
+              <div class="sw" id="swRem" role="switch" aria-checked="false"><i></i></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Data -->
+        <section class="rise" style="animation-delay:.3s">
+          <div class="sect">Data</div>
+          <div class="card">
+            <div class="datacol">
+              <button class="btn">Export CSV</button>
+              <button class="btn">Export JSON backup</button>
+              <div class="import-sep"></div>
+              <button class="btn">Import JSON backup</button>
+              <div class="warn">Importing a backup replaces everything currently in the app.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- About -->
+        <section class="rise" style="animation-delay:.36s; margin-bottom:24px">
+          <div class="sect">About</div>
+          <div class="card">
+            <div class="about">
+              <div>
+                <div class="t">HasabXesib</div>
+                <div class="s">Version 1.0.0</div>
+              </div>
+              <div class="leaf">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- dock -->
+      <div class="dock">
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V21h-6v-6h-6v6H3z"/></svg>Home</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3v18M17 3v18M3 7.5h4M3 12h4M17 12h4M17 16.5h4"/></svg>List</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/></svg>Budgets</div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20V8"/></svg>Reports</div>
+        <div class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12"/></svg>Settings</div>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- floating bar — obviously not part of the design -->
+  <div class="switcher">
+    <button id="theme" aria-label="toggle theme">☀/☾</button>
+  </div>
+
+<script>
+  const app = document.getElementById('app');
+  const themeBtn = document.getElementById('theme');
+  const seg = document.getElementById('segTheme');
+  const chips = document.getElementById('chipsLang');
+  const swLock = document.getElementById('swLock');
+  const swRem = document.getElementById('swRem');
+
+  function replay() {
+    app.classList.remove('anim');
+    void app.offsetWidth;           // reflow → entrance runs once per theme change
+    app.classList.add('anim');
+  }
+
+  themeBtn.addEventListener('click', () => {
+    app.classList.toggle('light');
+    syncSeg(app.classList.contains('light') ? 'light' : 'dark');
+    replay();
+  });
+
+  function syncSeg(mode) {
+    seg.querySelectorAll('button').forEach(b =>
+      b.classList.toggle('on', b.dataset.mode === mode));
+  }
+
+  // The in-app segmented control drives the real theme (System → dark at 21:40).
+  seg.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    syncSeg(b.dataset.mode);
+    const light = b.dataset.mode === 'light';
+    app.classList.toggle('light', light);
+    replay();
+  });
+
+  chips.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    chips.querySelectorAll('button').forEach(c => c.classList.toggle('on', c === b));
+  });
+
+  function wireSwitch(sw) {
+    sw.addEventListener('click', () => {
+      sw.classList.toggle('on');
+      sw.setAttribute('aria-checked', sw.classList.contains('on'));
+    });
+  }
+  wireSwitch(swLock);
+  wireSwitch(swRem);
+
+  replay();
+</script>
+</body>
+</html>

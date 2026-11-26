@@ -1,0 +1,330 @@
+<!doctype html>
+<!-- PROTOTYPE — throwaway. Not production code. Not part of the app. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HasabXesib — Accounts modal prototype</title>
+<style>
+  :root { --phone-w: 390px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  button { font-family: inherit; }
+  body {
+    background: #0d0d12; color: #e8e8ef;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 28px 16px 120px;
+  }
+  h1 { font-size: 15px; font-weight: 600; opacity: .75; margin-bottom: 6px; letter-spacing: .2px; }
+  .sub { font-size: 13px; opacity: .5; margin-bottom: 22px; }
+
+  .phone { width: var(--phone-w); border-radius: 46px; padding: 10px;
+    background: #1a1a22; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+  .screen { border-radius: 38px; overflow: hidden; position: relative;
+    height: 812px; }
+
+  /* ============ theme tokens — Dusk A v2 ============ */
+  .app {
+    --bg: #0B0E1A; --surface: #151A2E; --surface2: #1B2140;
+    --text: #EEF0FF; --text2: #8B93B8;
+    --accent: #818CF8; --accent2: #C084FC;
+    --income: #34D399; --expense: #FB7185;
+    --hair: rgba(255,255,255,.07);
+    --dim: rgba(5,6,14,.62);
+    --skybg: linear-gradient(165deg, #181343 0%, #2B2770 48%, #4A2B8F 100%);
+    background: var(--bg); color: var(--text); height: 100%; position: relative;
+  }
+  .app.light {
+    --bg: #F2F3FB; --surface: #FFFFFF; --surface2: #F4F4FE;
+    --text: #14162B; --text2: #63687F;
+    --accent: #4F46E5; --accent2: #7C3AED;
+    --income: #047857; --expense: #BE123C;
+    --hair: rgba(20,22,43,.08);
+    --dim: rgba(20,22,43,.42);
+    --skybg: linear-gradient(165deg, #DAE0FF 0%, #E9E8FF 55%, #F6ECFF 100%);
+  }
+
+  .statusbar { position: absolute; top: 0; left: 0; right: 0; height: 44px; z-index: 6;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 26px 6px; font-size: 13px; font-weight: 600; color: var(--text); }
+
+  /* ============ dimmed Home behind the sheet (context only) ============ */
+  .backdrop { position: absolute; inset: 0; }
+  .backdrop .sky { position: relative; overflow: hidden; padding: 58px 22px 30px;
+    background: var(--skybg); border-radius: 0 0 36px 36px; color: #F1F0FF; }
+  .app.light .backdrop .sky { color: #171935; }
+  .backdrop .aurora { position: absolute; border-radius: 999px; }
+  .backdrop .a1 { width: 320px; height: 320px; top: -150px; right: -90px;
+    background: radial-gradient(circle, rgba(129,140,248,.4) 0%, transparent 62%); }
+  .backdrop .a2 { width: 280px; height: 280px; bottom: -150px; left: -80px;
+    background: radial-gradient(circle, rgba(192,132,252,.32) 0%, transparent 62%); }
+  .app.light .backdrop .a1 { background: radial-gradient(circle, rgba(99,102,241,.22) 0%, transparent 62%); }
+  .app.light .backdrop .a2 { background: radial-gradient(circle, rgba(168,85,247,.18) 0%, transparent 62%); }
+  .backdrop .bcap { font-size: 12px; font-weight: 700; letter-spacing: 1.2px; opacity: .65; position: relative; }
+  .backdrop .bbig { font-size: 46px; font-weight: 800; letter-spacing: -2px; margin-top: 6px;
+    font-variant-numeric: tabular-nums; position: relative; line-height: 1; }
+  .backdrop .bcard { margin: 16px 18px 0; border-radius: 24px; padding: 16px 20px;
+    background: var(--surface); border: 1px solid var(--hair); }
+  .backdrop .bcap2 { font-size: 12px; color: var(--text2); font-weight: 600; }
+  .backdrop .bval { font-size: 22px; font-weight: 800; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .dim { position: absolute; inset: 0; background: var(--dim); z-index: 4; }
+
+  /* ============ the modal sheet ============ */
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; top: 96px; z-index: 5;
+    background: var(--bg); border: 1px solid var(--hair); border-bottom: none;
+    border-radius: 36px 36px 0 0;
+    box-shadow: 0 -18px 50px rgba(0,0,0,.4);
+    display: flex; flex-direction: column;
+  }
+  .app.light .sheet { box-shadow: 0 -18px 50px rgba(31,41,85,.18); }
+  .grab { width: 38px; height: 4px; border-radius: 999px; background: var(--text2);
+    opacity: .4; margin: 10px auto 2px; flex: none; }
+  .scroll { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: none;
+    padding: 6px 18px 26px; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  .tabnum { font-variant-numeric: tabular-nums; }
+
+  /* header */
+  .headrow { display: flex; align-items: center; justify-content: space-between; }
+  .headrow h2 { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
+  .xbtn { width: 44px; height: 44px; border: none; background: transparent; color: var(--text);
+    border-radius: 999px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; opacity: .85; }
+
+  /* total balance card */
+  .totalcard { margin-top: 10px; border-radius: 24px; padding: 16px 20px;
+    background: var(--surface); border: 1px solid var(--hair); }
+  .totalcard .cap { font-size: 13px; font-weight: 600; color: var(--text2); }
+  .totalcard .big { font-size: 36px; font-weight: 800; letter-spacing: -1.5px; margin-top: 3px; }
+  .totalcard .big .cur { font-size: 13px; font-weight: 700; color: var(--text2);
+    letter-spacing: .4px; margin-right: 8px; vertical-align: 16px; }
+
+  /* accounts list — ONE grouped surface, hairline rows */
+  .acclist { margin-top: 12px; background: var(--surface); border: 1px solid var(--hair);
+    border-radius: 22px; overflow: hidden; }
+  .acc { display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    border-bottom: 1px solid var(--hair); cursor: pointer; }
+  .acc:last-child { border-bottom: none; }
+  .badge { width: 40px; height: 40px; border-radius: 999px; flex: none;
+    display: flex; align-items: center; justify-content: center; }
+  .acc .grow { flex: 1; min-width: 0; }
+  .acc .name { font-size: 16px; font-weight: 700; }
+  .acc .type { font-size: 13px; font-weight: 600; color: var(--text2); margin-top: 1px; }
+  .acc .amt { font-size: 16px; font-weight: 800; }
+
+  /* action pills */
+  .btnrow { display: flex; gap: 12px; margin-top: 12px; }
+  .pill { flex: 1; height: 48px; border-radius: 999px; border: none; cursor: pointer;
+    font-size: 15px; font-weight: 700; display: flex; align-items: center;
+    justify-content: center; gap: 8px; }
+  .pill.grad { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 38%, transparent); }
+  .pill.surf { background: var(--surface); border: 1px solid var(--hair); color: var(--text); }
+  .pill.ghost { background: transparent; color: var(--text2); }
+
+  /* transfer form */
+  .formcard { margin-top: 18px; border-radius: 24px; padding: 18px 18px 16px;
+    background: var(--surface); border: 1px solid var(--hair); }
+  .formcard h3 { font-size: 17px; font-weight: 800; letter-spacing: -.3px; margin-bottom: 12px; }
+  .flabel { font-size: 13px; font-weight: 600; color: var(--text2); margin: 10px 0 7px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { height: 44px; padding: 0 18px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--hair); background: var(--surface2); color: var(--text);
+    font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+  .chip .dot { width: 8px; height: 8px; border-radius: 999px; }
+  .chip.on { border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent); font-weight: 700; }
+
+  /* amount display */
+  .amount { text-align: center; margin: 20px 0 4px; }
+  .amount .val { font-size: 46px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
+  .amount .cur { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--text2); margin-top: 8px; }
+
+  /* date + note fields */
+  .field { display: flex; align-items: center; gap: 12px; margin-top: 10px;
+    height: 50px; padding: 0 16px; border-radius: 16px;
+    background: var(--surface2); border: 1px solid var(--hair); color: var(--text); }
+  .field svg { flex: none; color: var(--text2); }
+  .field .flab { font-size: 13px; font-weight: 600; color: var(--text2); }
+  .field .fval { flex: 1; font-size: 15px; font-weight: 600; }
+  .field input { flex: 1; border: none; outline: none; background: transparent;
+    color: var(--text); font-size: 15px; font-family: inherit; }
+  .field input::placeholder { color: var(--text2); }
+
+  .formbtns { display: flex; gap: 12px; margin-top: 16px; }
+
+  /* entrance */
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .sheet.animate .rise { animation: rise .55s cubic-bezier(.2,.7,.2,1) both; }
+  .sheet.animate .rise:nth-child(2) { animation-delay: .06s; }
+  .sheet.animate .rise:nth-child(3) { animation-delay: .12s; }
+  .sheet.animate .rise:nth-child(4) { animation-delay: .18s; }
+  .sheet.animate .rise:nth-child(5) { animation-delay: .24s; }
+  .sheet.animate .rise:nth-child(6) { animation-delay: .3s; }
+  .sheet.animate .rise:nth-child(7) { animation-delay: .36s; }
+  .sheet.animate .rise:nth-child(8) { animation-delay: .42s; }
+  .sheet.animate .rise:nth-child(9) { animation-delay: .48s; }
+  .sheet.animate .rise:nth-child(10) { animation-delay: .54s; }
+
+  /* floating theme toggle (NOT part of the design) */
+  .switcher { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px; z-index: 50;
+    background: #fff; color: #111; border-radius: 999px; padding: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5); font-size: 13px; user-select: none; }
+  .switcher button { border: none; background: transparent; padding: 8px 14px;
+    font-size: 13px; cursor: pointer; border-radius: 999px; }
+  .switcher button:hover { background: #eee; }
+
+  @media (max-width: 480px) {
+    body { padding: 0; background: #000; }
+    h1, .sub { display: none; }
+    .phone { width: 100vw; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }
+    .screen { border-radius: 0; height: 100dvh; }
+    .switcher { bottom: max(10px, env(safe-area-inset-bottom)); padding: 4px; }
+  }
+</style>
+</head>
+<body>
+  <h1>HasabXesib — Accounts modal prototype</h1>
+  <div class="sub">Modal sheet over a dimmed Home · ☀/☾ toggles theme · throwaway mockup, no blur, RN-implementable</div>
+
+  <div class="phone"><div class="screen">
+    <div class="app" id="app">
+
+      <div class="statusbar"><span>21:40</span><span>▮▮▮ ᯤ</span></div>
+
+      <!-- dimmed Home behind the sheet — context only -->
+      <div class="backdrop" aria-hidden="true">
+        <div class="sky">
+          <div class="aurora a1"></div>
+          <div class="aurora a2"></div>
+          <div class="bcap">TOTAL BALANCE</div>
+          <div class="bbig">2,955.00</div>
+        </div>
+        <div class="bcard">
+          <div class="bcap2">Budget · Health</div>
+          <div class="bval" style="color:var(--accent)">TMT 640.00 left</div>
+        </div>
+      </div>
+      <div class="dim" aria-hidden="true"></div>
+
+      <!-- ================= ACCOUNTS SHEET ================= -->
+      <div class="sheet animate" id="sheet">
+        <div class="grab"></div>
+        <div class="scroll">
+
+          <div class="headrow rise">
+            <h2>Accounts</h2>
+            <button class="xbtn" aria-label="Close">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+
+          <div class="totalcard rise">
+            <div class="cap">Total balance</div>
+            <div class="big tabnum"><span class="cur">TMT</span>2,955.00</div>
+          </div>
+
+          <div class="acclist rise">
+            <div class="acc">
+              <div class="badge" style="background:rgba(16,185,129,.14); color:#10B981">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/>
+                  <path d="M21 8h-9a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h9"/>
+                </svg>
+              </div>
+              <div class="grow">
+                <div class="name">Cash</div>
+                <div class="type">Cash</div>
+              </div>
+              <div class="amt tabnum">900.00</div>
+            </div>
+            <div class="acc">
+              <div class="badge" style="background:rgba(129,140,248,.16); color:#818CF8">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="3"/>
+                  <path d="M2 10h20"/>
+                </svg>
+              </div>
+              <div class="grow">
+                <div class="name">Card</div>
+                <div class="type">Card</div>
+              </div>
+              <div class="amt tabnum">2,055.00</div>
+            </div>
+          </div>
+
+          <div class="btnrow rise">
+            <button class="pill grad">New account</button>
+            <button class="pill surf">Transfer</button>
+          </div>
+
+          <div class="formcard rise">
+            <h3>New transfer</h3>
+
+            <div class="flabel">From</div>
+            <div class="chips rise" style="animation-delay:.24s">
+              <button class="chip on"><span class="dot" style="background:#10B981"></span>Cash</button>
+              <button class="chip"><span class="dot" style="background:#818CF8"></span>Card</button>
+            </div>
+
+            <div class="flabel">To</div>
+            <div class="chips rise" style="animation-delay:.3s">
+              <button class="chip on"><span class="dot" style="background:#818CF8"></span>Card</button>
+            </div>
+
+            <div class="amount rise" style="animation-delay:.36s">
+              <div class="val tabnum">100.00</div>
+              <div class="cur">TMT</div>
+            </div>
+
+            <div class="field rise" style="animation-delay:.42s">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="5" width="18" height="16" rx="3"/>
+                <path d="M8 3v4M16 3v4M3 10h18"/>
+              </svg>
+              <span class="flab">Date</span>
+              <span class="fval tabnum">26 November 2026</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="opacity:.45"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+
+            <div class="field rise" style="animation-delay:.48s">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 6h16M4 6v12a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V6"/>
+                <path d="M9 12h6"/>
+              </svg>
+              <input type="text" placeholder="Note (optional)" aria-label="Note">
+            </div>
+
+            <div class="formbtns rise" style="animation-delay:.54s">
+              <button class="pill ghost">Cancel</button>
+              <button class="pill grad">Save</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div></div>
+
+  <div class="switcher">
+    <button id="theme" aria-label="toggle theme">☀/☾</button>
+  </div>
+
+<script>
+  const app = document.getElementById('app');
+  const sheet = document.getElementById('sheet');
+  document.getElementById('theme').addEventListener('click', () => {
+    app.classList.toggle('light');
+    // replay the sheet entrance on theme change
+    sheet.classList.remove('animate');
+    void sheet.offsetWidth; // reflow so the animation restarts
+    sheet.classList.add('animate');
+  });
+</script>
+</body>
+</html>

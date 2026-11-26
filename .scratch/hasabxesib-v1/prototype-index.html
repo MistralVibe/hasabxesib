@@ -1,0 +1,80 @@
+<!doctype html>
+<!-- PROTOTYPE INDEX — throwaway hub for the Dusk A v2 screen mockups. Not part of the app. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HasabXesib — Dusk A v2 · all screens</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(165deg, #181343 0%, #2B2770 55%, #0B0E1A 100%);
+    min-height: 100vh; color: #EEF0FF; padding: 48px 24px 80px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  h1 { font-size: 30px; font-weight: 800; letter-spacing: -1px; }
+  .sub { color: #8B93B8; font-size: 14px; margin-top: 8px; max-width: 60ch; line-height: 1.6; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-top: 32px; }
+  a.card {
+    display: block; text-decoration: none; color: inherit;
+    background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 22px; padding: 20px; transition: transform .15s ease, background .15s ease;
+  }
+  a.card:hover { transform: translateY(-3px); background: rgba(255,255,255,.07); }
+  .card .kind { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #818CF8; }
+  .card h2 { font-size: 18px; font-weight: 700; margin-top: 6px; }
+  .card p { font-size: 13px; color: #8B93B8; margin-top: 6px; line-height: 1.5; }
+  .note { margin-top: 36px; font-size: 12px; color: #8B93B8; opacity: .8; line-height: 1.7; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>HasabXesib — “Dusk A v2”</h1>
+    <div class="sub">Every screen mocked in the approved direction. Each opens standalone with a ☀/☾ theme toggle below the phone (on a phone it fills the screen). Home also keeps the A/B/C variant switcher — the verdict was A, elevated.</div>
+    <div class="grid">
+      <a class="card" href="prototype-home-variants.html?variant=vA">
+        <div class="kind">TAB</div><h2>Home</h2>
+        <p>Dusk sky hero, count-up balance, delta chip, budget ring, gradient budget card, floating dock. A/B/C variants kept for reference.</p>
+      </a>
+      <a class="card" href="prototype-transactions.html">
+        <div class="kind">TAB</div><h2>Transactions</h2>
+        <p>Search, separated type/month filter groups (double-“All” fixed), localized date headers, grouped list. Filters actually work.</p>
+      </a>
+      <a class="card" href="prototype-budgets.html">
+        <div class="kind">TAB</div><h2>Budgets</h2>
+        <p>Summary card with gradient bar, grouped budget rows with status colors, “New budget” category chips.</p>
+      </a>
+      <a class="card" href="prototype-reports.html">
+        <div class="kind">TAB</div><h2>Reports</h2>
+        <p>Month selector on the dusk band, SVG donut + legend, 12-month income/expense bars, trend line, biggest transactions.</p>
+      </a>
+      <a class="card" href="prototype-settings.html">
+        <div class="kind">TAB</div><h2>Settings</h2>
+        <p>Appearance, Manage rows, Security, Reminders, Data (import visually separated), About. Theme control is live.</p>
+      </a>
+      <a class="card" href="prototype-transaction-modal.html">
+        <div class="kind">MODAL</div><h2>New transaction</h2>
+        <p>Expense/Income segments, amount as hero with caret, category/account chips, date field, gradient Save. Chips are selectable.</p>
+      </a>
+      <a class="card" href="prototype-recurring-modal.html">
+        <div class="kind">MODAL</div><h2>Recurring</h2>
+        <p>Netflix rule card with Upcoming queue + Skip rows, open “New rule” form with frequency chips, quiet modal surfaces.</p>
+      </a>
+      <a class="card" href="prototype-accounts-modal.html">
+        <div class="kind">MODAL</div><h2>Accounts &amp; transfers</h2>
+        <p>Sheet over dimmed Home: total balance, grouped account rows, New account + Transfer, open transfer form.</p>
+      </a>
+      <a class="card" href="prototype-onboarding.html">
+        <div class="kind">FLOW</div><h2>Onboarding</h2>
+        <p>Step 1 currency picker under the full dusk sky, step 2 budget caps with progress pills — switch with the 1/2 buttons.</p>
+      </a>
+    </div>
+    <div class="note">
+      Honesty constraints: no backdrop blur anywhere; system fonts; inline SVG icons; tabular money figures; every tappable ≥ 44px.
+      Everything shown is buildable in Expo Go with expo-linear-gradient + built-in Animated — no new native dependencies (ADR-0005), no reanimated.
+      Mockups share one dataset: TMT, Nov 2026, Cash 900.00 / Card 2,055.00, total 2,955.00.
+    </div>
+  </div>
+</body>
+</html>

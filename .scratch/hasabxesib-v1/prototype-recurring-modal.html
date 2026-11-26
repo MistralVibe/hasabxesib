@@ -1,0 +1,279 @@
+<!doctype html>
+<!-- PROTOTYPE — throwaway. Not production code. Not part of the app. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HasabXesib — Recurring modal prototype</title>
+<style>
+  :root { --phone-w: 390px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d0d12; color: #e8e8ef;
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 28px 16px 120px;
+  }
+  h1 { font-size: 15px; font-weight: 600; opacity: .75; margin-bottom: 6px; letter-spacing: .2px; }
+  .sub { font-size: 13px; opacity: .5; margin-bottom: 22px; }
+
+  .phone { width: var(--phone-w); border-radius: 46px; padding: 10px; background: #1a1a22; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+  .screen { border-radius: 38px; overflow: hidden; position: relative; height: 812px; display: flex; flex-direction: column;
+    /* Dusk A v2 — dark (primary) */
+    --bg: #0B0E1A; --surface: #151A2E; --surface2: #1B2140; --text: #EEF0FF; --text2: #8B93B8;
+    --accent: #818CF8; --accent2: #C084FC; --income: #34D399; --expense: #FB7185; --warning: #FBBF24;
+    --hair: rgba(255,255,255,.07); --accentSoft: rgba(129,140,248,.16);
+    --subTint: rgba(167,139,250,.16); --expTint: rgba(251,113,133,.13); --incTint: rgba(52,211,153,.14);
+    background: var(--bg); color: var(--text);
+  }
+  .screen.light {
+    --bg: #F2F3FB; --surface: #FFFFFF; --surface2: #F4F4FE; --text: #14162B; --text2: #63687F;
+    --accent: #4F46E5; --accent2: #7C3AED; --income: #047857; --expense: #BE123C; --warning: #B45309;
+    --hair: rgba(20,22,43,.08); --accentSoft: rgba(79,70,229,.12);
+    --subTint: rgba(124,58,237,.10); --expTint: rgba(190,18,60,.09); --incTint: rgba(4,120,87,.10);
+  }
+  .tabnum { font-variant-numeric: tabular-nums; }
+  .grow { flex: 1; min-width: 0; }
+  svg { flex: none; }
+
+  /* status bar strip (mock) */
+  .statusbar { height: 44px; flex: none; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 26px 6px; font-size: 13px; font-weight: 600; color: #F1F0FF; position: relative; z-index: 2; }
+  .screen.light .statusbar { color: #171935; }
+
+  /* dimmed Home behind the sheet — quiet scrim, no blur */
+  .behind { position: absolute; inset: 0;
+    background: linear-gradient(165deg, #181343 0%, #2B2770 48%, #4A2B8F 100%); }
+  .screen.light .behind { background: linear-gradient(165deg, #DAE0FF 0%, #E9E8FF 55%, #F6ECFF 100%); }
+  .behind .bal { position: absolute; top: 62px; left: 22px; color: #F1F0FF; }
+  .screen.light .behind .bal { color: #171935; }
+  .behind .bal .cap { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; opacity: .55; }
+  .behind .bal .n { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; margin-top: 2px; }
+  .behind::after { content: ""; position: absolute; inset: 0; background: rgba(6,8,20,.56); }
+  .screen.light .behind::after { background: rgba(20,22,43,.30); }
+
+  /* the sheet itself */
+  .sheetwrap { flex: 1; min-height: 0; margin-top: 24px; display: flex; position: relative; z-index: 2; }
+  .sheet { flex: 1; min-height: 0; display: flex; flex-direction: column;
+    background: var(--bg); border-radius: 36px 36px 0 0; border-top: 1px solid var(--hair);
+    box-shadow: 0 -18px 50px rgba(0,0,0,.4); }
+  .screen.light .sheet { box-shadow: 0 -18px 44px rgba(31,41,85,.14); }
+  .grab { width: 40px; height: 5px; border-radius: 999px; background: var(--hair); margin: 10px auto 2px; flex: none; }
+  .scroll { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: none; padding: 14px 18px 26px; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* header row */
+  .head { display: flex; align-items: center; justify-content: space-between; }
+  .head h2 { font-size: 30px; font-weight: 800; letter-spacing: -1px; }
+  .addbtn { width: 44px; height: 44px; border-radius: 999px; background: var(--surface);
+    border: 1px solid var(--hair); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; }
+
+  /* rule card */
+  .rulecard { margin-top: 16px; background: var(--surface); border: 1px solid var(--hair);
+    border-radius: 24px; padding: 14px 16px 6px; }
+  .rule { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; }
+  .cat-dot { width: 38px; height: 38px; border-radius: 999px; flex: none;
+    display: flex; align-items: center; justify-content: center; }
+  .rule .t { font-size: 16px; font-weight: 600; }
+  .rule .s { font-size: 13px; color: var(--text2); margin-top: 1px; font-weight: 500; }
+  .amt { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .queue { border-top: 1px solid var(--hair); padding: 10px 0 4px; }
+  .queue .qcap { font-size: 12px; color: var(--text2); font-weight: 700; letter-spacing: .6px; margin-bottom: 2px; }
+  .qrow { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+  .qrow + .qrow { border-top: 1px solid var(--hair); }
+  .qrow .d { font-size: 13px; color: var(--text2); font-weight: 500; }
+  .skip { font-size: 13px; color: var(--accent); font-weight: 700; min-height: 44px;
+    display: flex; align-items: center; }
+
+  /* form */
+  .formtitle { display: flex; align-items: baseline; justify-content: space-between; margin: 22px 2px 12px; }
+  .formtitle h3 { font-size: 15px; font-weight: 700; }
+  .seg { display: flex; gap: 8px; }
+  .seg div { flex: 1; height: 46px; border-radius: 16px; background: var(--surface);
+    border: 1px solid var(--hair); display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: var(--text2); }
+  .seg .on-exp { background: var(--expTint); border-color: color-mix(in srgb, var(--expense) 45%, transparent);
+    color: var(--expense); font-weight: 700; }
+
+  .amount { margin-top: 12px; background: var(--surface); border: 1px solid var(--hair);
+    border-radius: 22px; padding: 16px 12px 12px; text-align: center; }
+  .amount .n { font-size: 44px; font-weight: 800; letter-spacing: -2px; line-height: 1;
+    font-variant-numeric: tabular-nums; }
+  .amount .cur { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: var(--text2); margin-top: 8px; }
+
+  .label { font-size: 12px; color: var(--text2); font-weight: 700; letter-spacing: .3px; margin: 16px 2px 9px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+    border: 1px solid var(--hair); background: var(--surface);
+    padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--text); }
+  .chip svg { display: block; }
+  .chip.on-cat { border-color: #A78BFA; background: var(--subTint); }
+  .chip.on-acc, .chip.on-freq { border-color: var(--accent); background: var(--accentSoft);
+    color: var(--accent); font-weight: 700; }
+
+  .field { display: flex; align-items: center; gap: 10px; min-height: 48px; border-radius: 18px;
+    background: var(--surface); border: 1px solid var(--hair); padding: 12px 14px; }
+  .field .txt { font-size: 15px; font-weight: 600; }
+  .field .txt.ph { color: var(--text2); font-weight: 500; }
+  .field .chev { margin-left: auto; color: var(--text2); opacity: .55; }
+
+  .save { margin-top: 20px; width: 100%; height: 54px; border-radius: 999px; border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    font-size: 16px; font-weight: 700; letter-spacing: .2px; font-family: inherit;
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--accent) 40%, transparent); }
+  .cancel { margin-top: 8px; width: 100%; height: 50px; border-radius: 999px; border: none;
+    background: transparent; color: var(--text2); font-size: 15px; font-weight: 600; font-family: inherit; }
+
+  /* staggered entrance */
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .screen.play .rise { animation: rise .55s cubic-bezier(.2,.7,.2,1) both; }
+
+  /* floating switcher (NOT part of the design) */
+  .switcher { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px; z-index: 50;
+    background: #fff; color: #111; border-radius: 999px; padding: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5); user-select: none; }
+  .switcher button { border: none; background: transparent; padding: 8px 14px; font-size: 14px;
+    cursor: pointer; border-radius: 999px; font-family: inherit; }
+  .switcher button:hover { background: #eee; }
+
+  @media (max-width: 480px) {
+    /* On a real phone: no stage, no frame — the prototype fills the screen. */
+    body { padding: 0; background: #000; }
+    h1, .sub { display: none; }
+    .phone { width: 100vw; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }
+    .screen { border-radius: 0; height: 100dvh; }
+    .switcher { bottom: max(10px, env(safe-area-inset-bottom)); padding: 4px; }
+  }
+</style>
+</head>
+<body>
+  <h1>HasabXesib — Recurring modal prototype</h1>
+  <div class="sub">Modal sheet over Home · Dusk A v2 · ☀/☾ toggles theme · throwaway mockup, no blur, RN-implementable</div>
+
+  <div class="phone"><div class="screen play" id="screen">
+    <div class="behind">
+      <div class="bal">
+        <div class="cap">TOTAL BALANCE</div>
+        <div class="n tabnum">2,955.00</div>
+      </div>
+    </div>
+    <div class="statusbar"><span>21:40</span><span>▮▮▮ ᯤ</span></div>
+
+    <div class="sheetwrap"><div class="sheet">
+      <div class="grab"></div>
+      <div class="scroll">
+
+        <!-- header -->
+        <div class="head rise">
+          <h2>Recurring</h2>
+          <button class="addbtn" aria-label="new rule">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+
+        <!-- rule card with queue -->
+        <div class="rulecard rise" style="animation-delay:.06s">
+          <div class="rule">
+            <div class="cat-dot" style="background:#8B5CF626; color:#A78BFA">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14.9-4"/><path d="M20 12a8 8 0 0 1-14.9 4"/><path d="M19 3v5h-5M5 21v-5h5"/></svg>
+            </div>
+            <div class="grow">
+              <div class="t">Netflix</div>
+              <div class="s">Monthly · Card · Next: 5 Dec</div>
+            </div>
+            <div class="amt" style="color:var(--expense)">−30.00</div>
+          </div>
+          <div class="queue">
+            <div class="qcap">UPCOMING</div>
+            <div class="qrow"><span class="d tabnum">Due 5 Dec</span><a class="skip">Skip</a></div>
+            <div class="qrow"><span class="d tabnum">Due 5 Jan</span><a class="skip">Skip</a></div>
+            <div class="qrow"><span class="d tabnum">Due 5 Feb</span><a class="skip">Skip</a></div>
+          </div>
+        </div>
+
+        <!-- open "New rule" form -->
+        <div class="formtitle rise" style="animation-delay:.12s"><h3>New rule</h3></div>
+
+        <div class="seg rise" style="animation-delay:.18s">
+          <div class="on-exp">Expense</div>
+          <div>Income</div>
+        </div>
+
+        <div class="amount rise" style="animation-delay:.24s">
+          <div class="n">30.00</div>
+          <div class="cur">TMT</div>
+        </div>
+
+        <div class="rise" style="animation-delay:.30s">
+          <div class="label">CATEGORY</div>
+          <div class="chips">
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"><path d="M4 12h16a8 8 0 0 1-16 0z"/><path d="M8.5 8c0-1.2.9-1.6.9-3M13 8c0-1.2.9-1.6.9-3"/></svg>Food &amp; dining</span>
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l2-6a2 2 0 0 1 1.9-1.4h8.2A2 2 0 0 1 18 10l2 6"/><path d="M3 16h18M6.5 19v-3M17.5 19v-3"/></svg>Transport</span>
+            <span class="chip on-cat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14.9-4"/><path d="M20 12a8 8 0 0 1-14.9 4"/><path d="M19 3v5h-5M5 21v-5h5"/></svg>Subscriptions</span>
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FB7185" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/></svg>Health</span>
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7E8CC9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/></svg>Housing</span>
+          </div>
+        </div>
+
+        <div class="rise" style="animation-delay:.36s">
+          <div class="label">ACCOUNT</div>
+          <div class="chips">
+            <span class="chip">Cash</span>
+            <span class="chip on-acc">Card</span>
+          </div>
+        </div>
+
+        <div class="rise" style="animation-delay:.42s">
+          <div class="label">FREQUENCY</div>
+          <div class="chips">
+            <span class="chip">Daily</span>
+            <span class="chip">Weekly</span>
+            <span class="chip on-freq">Monthly</span>
+            <span class="chip">Yearly</span>
+          </div>
+        </div>
+
+        <div class="rise" style="animation-delay:.48s">
+          <div class="label">START DATE</div>
+          <div class="field">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".55"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            <span class="txt tabnum">5 December 2026</span>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </div>
+        </div>
+
+        <div class="rise" style="animation-delay:.54s; margin-top:12px">
+          <div class="field">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".55"><path d="M4 6h16M7 12h10M9 18h6"/></svg>
+            <span class="txt ph">Note (optional)</span>
+          </div>
+        </div>
+
+        <div class="rise" style="animation-delay:.60s">
+          <button class="save">Save</button>
+          <button class="cancel">Cancel</button>
+        </div>
+
+      </div>
+    </div></div>
+  </div></div>
+
+  <div class="switcher">
+    <button id="theme" aria-label="toggle theme">☀/☾</button>
+  </div>
+
+<script>
+  const screen = document.getElementById('screen');
+  const themeBtn = document.getElementById('theme');
+  themeBtn.onclick = () => {
+    screen.classList.toggle('light');
+    /* re-run the staggered entrance on theme change */
+    screen.classList.remove('play');
+    void screen.offsetWidth; /* reflow to restart animations */
+    screen.classList.add('play');
+  };
+</script>
+</body>
+</html>
