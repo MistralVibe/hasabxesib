@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "HasabXesib",
+    "slug": "hasabxesib",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "hasabxesib",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hasabxesib.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0F172A",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.hasabxesib.app",
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-localization"
+    ]
+  }
+}
