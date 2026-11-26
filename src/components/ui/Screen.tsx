@@ -7,14 +7,17 @@ export function Screen({
   children,
   scroll = true,
   style,
+  background,
 }: {
   children: React.ReactNode;
   scroll?: boolean;
   style?: StyleProp<ViewStyle>;
+  /** Status-bar strip color, for screens whose hero bleeds into the safe area. */
+  background?: string;
 }) {
   const { theme } = useTheme();
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: theme.colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: background ?? theme.colors.background }]} edges={['top']}>
       {scroll ? (
         <ScrollView
           style={styles.flex}

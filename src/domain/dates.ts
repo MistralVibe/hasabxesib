@@ -42,6 +42,17 @@ export function addYears(iso: string, years: number): string {
   return addMonths(iso, years * 12);
 }
 
+export type TimeOfDay = 'night' | 'morning' | 'afternoon' | 'evening';
+
+/** Coarse part of the local day, used by the Home greeting (05–11 morning, 12–17 afternoon, 18–23 evening). */
+export function timeOfDayBucket(date: Date): TimeOfDay {
+  const hour = date.getHours();
+  if (hour < 5) return 'night';
+  if (hour < 12) return 'morning';
+  if (hour < 18) return 'afternoon';
+  return 'evening';
+}
+
 export function monthKeyOf(iso: string): string {
   return iso.slice(0, 7);
 }

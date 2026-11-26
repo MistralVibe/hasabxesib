@@ -10,6 +10,12 @@ export const ru: Dictionary = {
   },
   home: {
     title: 'Главная',
+    greetingMorning: 'Доброе утро',
+    greetingAfternoon: 'Добрый день',
+    greetingEvening: 'Добрый вечер',
+    greetingNight: 'Доброй ночи',
+    thisMonth: '{amount} за месяц',
+    ofBudgetLabel: 'из бюджета',
     totalBalance: 'Общий баланс',
     monthSpent: 'Потрачено за месяц',
     ofBudget: 'из бюджета {amount}',

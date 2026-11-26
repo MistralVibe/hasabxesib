@@ -10,6 +10,19 @@ export function isInMonth(isoDate: string, monthKey: string): boolean {
   return monthKeyOf(isoDate) === monthKey;
 }
 
+/**
+ * Net movement of a month in minor units: income minus expenses. Positive means
+ * the month earned more than it spent; negative means it spent more.
+ */
+export function netInMonth(transactions: Transaction[], monthKey: string): Money {
+  let net = 0;
+  for (const t of transactions) {
+    if (!isInMonth(t.date, monthKey)) continue;
+    net += signedAmount(t);
+  }
+  return net;
+}
+
 export interface TransactionInput {
   accountId: string;
   categoryId: string;

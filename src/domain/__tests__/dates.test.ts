@@ -1,4 +1,4 @@
-import { addDays, addMonths, addYears, monthKeyOf, monthBounds, nextDueAfter, startOfDayISO } from '../dates';
+import { addDays, addMonths, addYears, monthKeyOf, monthBounds, nextDueAfter, startOfDayISO, timeOfDayBucket } from '../dates';
 
 describe('month helpers', () => {
   it('monthKeyOf returns yyyy-mm', () => {
@@ -65,5 +65,20 @@ describe('nextDueAfter', () => {
 describe('startOfDayISO', () => {
   it('returns local yyyy-mm-dd', () => {
     expect(startOfDayISO(new Date(2026, 10, 26, 15, 45))).toBe('2026-11-26');
+  });
+});
+
+describe('timeOfDayBucket', () => {
+  const at = (hour: number) => new Date(2026, 10, 26, hour, 30);
+
+  it('maps the day into four greeting buckets', () => {
+    expect(timeOfDayBucket(at(0))).toBe('night');
+    expect(timeOfDayBucket(at(4))).toBe('night');
+    expect(timeOfDayBucket(at(5))).toBe('morning');
+    expect(timeOfDayBucket(at(11))).toBe('morning');
+    expect(timeOfDayBucket(at(12))).toBe('afternoon');
+    expect(timeOfDayBucket(at(17))).toBe('afternoon');
+    expect(timeOfDayBucket(at(18))).toBe('evening');
+    expect(timeOfDayBucket(at(23))).toBe('evening');
   });
 });

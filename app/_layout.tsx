@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { AppState, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 import { I18nProvider, useI18n } from '@/i18n';
 import { useSettingsStore } from '@/stores/useSettingsStore';
@@ -131,11 +132,20 @@ function StartupGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/** Status-bar icons follow the app's resolved theme, not the OS scheme: the Dusk
+ * hero paints the safe-area strip, so a light-theme app on a dark OS would
+ * otherwise render white icons on a pale sky. */
+function ThemedStatusBar() {
+  const { theme } = useTheme();
+  return <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />;
+}
+
 export default function RootLayout() {
   return (
     <View style={styles.root}>
       <SafeAreaProvider>
         <ThemeProvider>
+          <ThemedStatusBar />
           <I18nProvider>
             <ErrorBoundary>
             <StartupGate>

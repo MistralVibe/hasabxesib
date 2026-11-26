@@ -85,3 +85,23 @@ export function formatSignedMoney(minor: number, currency: string, locale: strin
   if (minor === 0) return body;
   return minor > 0 ? `+${body}` : `-${body}`;
 }
+
+const amountFormatterCache = new Map<string, Intl.NumberFormat>();
+
+/**
+ * Format minor units as a plain localized number with no currency symbol or code
+ * ("1,234.56") — for hero amounts that carry their unit in a separate label.
+ */
+export function formatAmount(minor: number, currency: string, locale: string): string {
+  const exponent = exponentFor(currency);
+  const key = `${currency.toUpperCase()}|${locale}`;
+  let fmt = amountFormatterCache.get(key);
+  if (!fmt) {
+    fmt = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: exponent,
+      maximumFractionDigits: exponent,
+    });
+    amountFormatterCache.set(key, fmt);
+  }
+  return fmt.format(fromMinor(minor, currency));
+}

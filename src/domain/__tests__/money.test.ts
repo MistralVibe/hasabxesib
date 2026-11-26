@@ -1,4 +1,4 @@
-import { formatMoney, parseAmountInput, toMinor, ZERO_DECIMAL_CURRENCIES } from '../money';
+import { formatAmount, formatMoney, parseAmountInput, toMinor, ZERO_DECIMAL_CURRENCIES } from '../money';
 
 describe('toMinor', () => {
   it('converts decimal string to minor units for 2-decimal currencies', () => {
@@ -45,5 +45,17 @@ describe('formatMoney', () => {
 
   it('formats zero-decimal currency without fraction digits', () => {
     expect(formatMoney(1500, 'JPY', 'en-US')).toBe('¥1,500');
+  });
+});
+
+describe('formatAmount', () => {
+  it('formats minor units as a plain localized number without a currency symbol', () => {
+    expect(formatAmount(123456, 'USD', 'en-US')).toBe('1,234.56');
+    expect(formatAmount(0, 'USD', 'en-US')).toBe('0.00');
+    expect(formatAmount(-2500, 'USD', 'en-US')).toBe('-25.00');
+  });
+
+  it('keeps zero-decimal currencies integer', () => {
+    expect(formatAmount(1500, 'JPY', 'en-US')).toBe('1,500');
   });
 });

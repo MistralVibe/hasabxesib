@@ -8,6 +8,12 @@ export const en = {
   },
   home: {
     title: 'Home',
+    greetingMorning: 'Good morning',
+    greetingAfternoon: 'Good afternoon',
+    greetingEvening: 'Good evening',
+    greetingNight: 'Good night',
+    thisMonth: '{amount} this month',
+    ofBudgetLabel: 'of budget',
     totalBalance: 'Total balance',
     monthSpent: 'Spent this month',
     ofBudget: 'of {amount} budget',
