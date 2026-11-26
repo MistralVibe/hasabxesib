@@ -256,7 +256,7 @@ export default function AccountsScreen() {
               value={tDate} onChangeText={setTDate}
               placeholder="yyyy-mm-dd" placeholderTextColor={c.textSecondary}
               autoCapitalize="none"
-              style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, backgroundColor: c.background }]}
+              style={[styles.input, { color: c.text, borderColor: c.border, borderRadius: theme.radii.md, borderCurve: 'continuous', backgroundColor: c.background }]}
             />
             <TextInput
               value={tNote} onChangeText={setTNote}
