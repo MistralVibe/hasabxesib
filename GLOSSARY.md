@@ -17,7 +17,7 @@ Moving money between two **Accounts**. It is not a **Transaction**: it never app
 _Avoid_: transaction, payment
 
 **Category**:
-A label classifying a **Transaction** (e.g. Food, Transport, Salary), with an icon and a color. Predefined set plus user-created custom categories.
+A label classifying a **Transaction** (e.g. Food, Transport, Salary), with an icon and a color. Predefined set plus user-created custom categories. Predefined categories carry an i18n `nameKey` and are translated; custom categories store a literal user-entered `name` (`nameKey: null`) and are shown as-is in every language — user text is never translated.
 _Avoid_: tag, group, type
 
 **Budget**:

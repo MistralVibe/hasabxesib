@@ -108,8 +108,13 @@ export default function HomeScreen() {
             }}
           />
 
-          <SectionTitle title={t('home.upcomingRecurring')} />
+          <SectionTitle
+            title={t('home.upcomingRecurring')}
+            action={t('home.seeAll')}
+            onAction={() => router.push('/recurring')}
+          />
           {nextRecurring ? (
+            <Pressable onPress={() => router.push('/recurring')}>
             <Card style={styles.txRow}>
               {nextRecurring.category ? <CategoryIcon icon={nextRecurring.category.icon} color={nextRecurring.category.color} /> : null}
               <View style={styles.flex}>
@@ -120,6 +125,7 @@ export default function HomeScreen() {
                 {signed(nextRecurring.rule.type === 'income' ? nextRecurring.rule.amount : -nextRecurring.rule.amount)}
               </Text>
             </Card>
+            </Pressable>
           ) : (
             <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>{t('home.noUpcoming')}</Text>
           )}

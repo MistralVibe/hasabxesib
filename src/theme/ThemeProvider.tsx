@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import { buildTheme, ResolvedScheme, ThemeMode, ThemeTokens } from './tokens';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 
 interface ThemeContextValue {
   theme: ThemeTokens;
@@ -12,10 +13,11 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme() ?? 'light';
-  const [mode, setMode] = useState<ThemeMode>('system');
+  const mode = useSettingsStore((s) => s.settings.theme);
 
   const value = useMemo<ThemeContextValue>(() => {
     const scheme: ResolvedScheme = mode === 'system' ? systemScheme : mode;
+    const setMode = (m: ThemeMode) => useSettingsStore.getState().update('theme', m);
     return { theme: buildTheme(scheme), mode, setMode };
   }, [mode, systemScheme]);
 

@@ -8,6 +8,7 @@ import { I18nProvider, useI18n } from '@/i18n';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useDataStore } from '@/stores/useDataStore';
 import { androidChannelSetup, ensurePermissions } from '@/services/notifications';
+import { refreshBudgetAlerts } from '@/services/budgetAlerts';
 import { authenticate, isLockAvailable } from '@/services/lock';
 import { Button } from '@/components/ui/Button';
 
@@ -18,6 +19,8 @@ function StartupGate({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
   const [locked, setLocked] = useState(false);
   const [lockChecked, setLockChecked] = useState(false);
+  const tRef = React.useRef(t);
+  tRef.current = t;
 
   useEffect(() => {
     load();
@@ -25,6 +28,14 @@ function StartupGate({ children }: { children: React.ReactNode }) {
     dataStore.materializeRecurring();
     androidChannelSetup();
     void ensurePermissions();
+    // Re-evaluate budget alerts whenever transactions or budgets change.
+    const unsub = useDataStore.subscribe((state, prev) => {
+      if (state.transactions !== prev.transactions || state.budgets !== prev.budgets) {
+        void refreshBudgetAlerts((path, params) => tRef.current(path, params));
+      }
+    });
+    void refreshBudgetAlerts((path, params) => tRef.current(path, params));
+    return () => unsub();
   }, []);
 
   useEffect(() => {
@@ -103,6 +114,7 @@ export default function RootLayout() {
                 <Stack.Screen name="onboarding" options={{ presentation: 'modal', headerShown: false, gestureEnabled: false }} />
                 <Stack.Screen name="transaction" options={{ presentation: 'modal' }} />
                 <Stack.Screen name="accounts" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="recurring" options={{ presentation: 'modal' }} />
                 <Stack.Screen name="+not-found" />
               </Stack>
             </StartupGate>

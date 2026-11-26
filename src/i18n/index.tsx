@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { getLocales } from 'expo-localization';
 import { en } from './en';
 import { ru } from './ru';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 
 export type Language = 'en' | 'ru';
 
@@ -34,8 +35,9 @@ function resolve(path: string, dict: unknown): string | undefined {
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const stored = useSettingsStore((s) => s.settings.language);
   const deviceLang = getLocales()[0]?.languageCode ?? 'en';
-  const [language, setLanguage] = useState<Language>(deviceLang === 'ru' ? 'ru' : 'en');
+  const language: Language = stored === 'en' || stored === 'ru' ? stored : deviceLang === 'ru' ? 'ru' : 'en';
 
   const value = useMemo<I18nContextValue>(() => {
     const t = (path: TranslationPath, params?: Record<string, string | number>): string => {
@@ -44,6 +46,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
         params && key in params ? String(params[key]) : m,
       );
     };
+    const setLanguage = (lang: Language) => useSettingsStore.getState().update('language', lang);
     return { language, setLanguage, t };
   }, [language]);
 
