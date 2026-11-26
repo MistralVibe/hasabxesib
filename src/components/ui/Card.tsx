@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 
-export function Card({ children, style, elevated = false }: { children: React.ReactNode; style?: ViewStyle; elevated?: boolean }) {
+export function Card({ children, style, elevated = false }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; elevated?: boolean }) {
   const { theme } = useTheme();
   return (
     <View

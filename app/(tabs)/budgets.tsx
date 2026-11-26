@@ -38,15 +38,13 @@ export default function BudgetsScreen() {
   const summary = useMemo(() => monthBudgetSummary(budgets, transactions, monthKey), [budgets, transactions, monthKey]);
 
   const expenseCategories = categories.filter((cat) => cat.type === 'expense');
-  const budgetedIds = new Set(budgets.map((b) => b.categoryId));
-  const unbudgeted = useMemo(
-    () =>
-      expenseCategories
-        .filter((cat) => !budgetedIds.has(cat.id))
-        .map((cat) => ({ category: cat, spent: spentForCategory(transactions, cat.id, monthKey) }))
-        .filter((x) => x.spent > 0),
-    [expenseCategories, budgetedIds, transactions, monthKey],
-  );
+  const unbudgeted = useMemo(() => {
+    const budgetedIds = new Set(budgets.map((b) => b.categoryId));
+    return expenseCategories
+      .filter((cat) => !budgetedIds.has(cat.id))
+      .map((cat) => ({ category: cat, spent: spentForCategory(transactions, cat.id, monthKey) }))
+      .filter((x) => x.spent > 0);
+  }, [expenseCategories, budgets, transactions, monthKey]);
 
   const [editing, setEditing] = useState<Category | null>(null);
   const [capInput, setCapInput] = useState('');

@@ -16,7 +16,7 @@ type Step = 'currency' | 'budgets';
 
 export default function OnboardingScreen() {
   const { theme } = useTheme();
-  const { t, language, setLanguage } = useI18n();
+  const { t, language } = useI18n();
   const router = useRouter();
   const updateSettings = useSettingsStore((s) => s.update);
   const { categories, upsertBudget } = useDataStore();

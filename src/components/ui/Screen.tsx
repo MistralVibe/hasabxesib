@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
+import { ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeProvider';
 
@@ -10,7 +10,7 @@ export function Screen({
 }: {
   children: React.ReactNode;
   scroll?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }) {
   const { theme } = useTheme();
   return (

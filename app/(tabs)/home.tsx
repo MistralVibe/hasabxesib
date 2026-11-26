@@ -23,7 +23,8 @@ export default function HomeScreen() {
   const { t } = useI18n();
   const { money, signed } = useFormatters();
   const router = useRouter();
-  const { accounts, transactions, budgets, recurringRules, totalBalance, balanceOf, loaded } = useDataStore();
+  const { accounts, transactions, budgets, recurringRules, totalBalance, loaded } = useDataStore();
+  const categories = useDataStore((s) => s.categories);
 
   const monthKey = monthKeyOf(startOfDayISO(new Date()));
   const summary = useMemo(
@@ -31,19 +32,18 @@ export default function HomeScreen() {
     [budgets, transactions, monthKey],
   );
   const recent = useMemo(() => transactions.slice(0, 5), [transactions]);
-  const nextRecurring = useMemo(() => {
-    const today = startOfDayISO(new Date());
-    for (const rule of recurringRules.filter((r) => r.isActive)) {
-      const next = upcomingOccurrences(rule, today, 1)[0];
-      if (next) {
-        const category = useDataStore.getState().categories.find((c) => c.id === rule.categoryId);
-        return { rule, next, category };
-      }
+  const today = startOfDayISO(new Date());
+  let nextRecurring: { rule: (typeof recurringRules)[number]; next: string; category: (typeof categories)[number] | undefined } | null = null;
+  for (const rule of recurringRules) {
+    if (!rule.isActive) continue;
+    const next = upcomingOccurrences(rule, today, 1)[0];
+    if (next) {
+      nextRecurring = { rule, next, category: categories.find((c) => c.id === rule.categoryId) };
+      break;
     }
-    return null;
-  }, [recurringRules]);
+  }
 
-  const categoryById = (id: string) => useDataStore.getState().categories.find((c) => c.id === id);
+  const categoryById = (id: string) => categories.find((c) => c.id === id);
   const accountById = (id: string) => accounts.find((a) => a.id === id);
 
   const c = theme.colors;

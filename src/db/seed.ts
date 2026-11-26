@@ -2,7 +2,7 @@ import { Category } from '@/domain/types';
 
 // Predefined categories, seeded on first run. `nameKey` points into the i18n
 // dictionaries (categories.*), `name` is the English fallback.
-export const PREDEFINED_CATEGORIES: Array<Omit<Category, 'id' | 'createdAt' | 'isPredefined'>> = [
+export const PREDEFINED_CATEGORIES: Omit<Category, 'id' | 'createdAt' | 'isPredefined'>[] = [
   // expense
   { nameKey: 'categories.food', name: 'Food & dining', icon: 'fast-food', color: '#F59E0B', type: 'expense' },
   { nameKey: 'categories.transport', name: 'Transport', icon: 'car', color: '#3B82F6', type: 'expense' },

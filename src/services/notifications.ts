@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { AndroidImportance } from 'expo-notifications/build/NotificationChannelManager.types';
 import { Platform } from 'react-native';
 
 // Local-only notifications (ADR-0002): budget alerts, daily reminder, recurring posted.
@@ -50,7 +51,7 @@ export function androidChannelSetup(): void {
   if (Platform.OS === 'android') {
     void Notifications.setNotificationChannelAsync('default', {
       name: 'default',
-      importance: Notifications.AndroidImportance.DEFAULT,
+      importance: AndroidImportance.DEFAULT,
     });
   }
 }

@@ -13,7 +13,6 @@ import { parseAmountInput, toMinor } from '@/domain/money';
 import { startOfDayISO } from '@/domain/dates';
 import { TransactionType } from '@/domain/types';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
 
 export default function TransactionModal() {

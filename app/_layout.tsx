@@ -11,21 +11,24 @@ import { androidChannelSetup, ensurePermissions } from '@/services/notifications
 import { refreshBudgetAlerts } from '@/services/budgetAlerts';
 import { authenticate, isLockAvailable } from '@/services/lock';
 import { Button } from '@/components/ui/Button';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 function StartupGate({ children }: { children: React.ReactNode }) {
-  const { settings, loaded, load } = useSettingsStore();
-  const dataStore = useDataStore();
+  const { settings, loaded } = useSettingsStore();
   const { t } = useI18n();
   const { theme } = useTheme();
   const [locked, setLocked] = useState(false);
   const [lockChecked, setLockChecked] = useState(false);
   const tRef = React.useRef(t);
-  tRef.current = t;
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   useEffect(() => {
-    load();
-    dataStore.load();
-    dataStore.materializeRecurring();
+    // Run once on mount: load stores, post overdue recurring rules, set up alerts.
+    useSettingsStore.getState().load();
+    useDataStore.getState().load();
+    useDataStore.getState().materializeRecurring();
     androidChannelSetup();
     void ensurePermissions();
     // Re-evaluate budget alerts whenever transactions or budgets change.
@@ -52,7 +55,7 @@ function StartupGate({ children }: { children: React.ReactNode }) {
       if (!available) {
         setLocked(false);
       } else {
-        const ok = await authenticate(t('settings.appLock'));
+        const ok = await authenticate(tRef.current('settings.appLock'));
         if (mounted) setLocked(!ok);
       }
       if (mounted) setLockChecked(true);
@@ -108,6 +111,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <I18nProvider>
+            <ErrorBoundary>
             <StartupGate>
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="(tabs)" />
@@ -118,6 +122,7 @@ export default function RootLayout() {
                 <Stack.Screen name="+not-found" />
               </Stack>
             </StartupGate>
+            </ErrorBoundary>
           </I18nProvider>
         </ThemeProvider>
       </SafeAreaProvider>

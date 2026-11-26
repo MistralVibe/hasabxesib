@@ -49,7 +49,7 @@ export interface MaterializeResult {
   /** The updated rule (nextDueDate advanced past nowISO). */
   updatedRule: RecurringRule;
   /** Transactions to insert, one per post date. */
-  transactions: Array<Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>>;
+  transactions: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>[];
 }
 
 /**
