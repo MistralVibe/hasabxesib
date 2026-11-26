@@ -64,3 +64,7 @@ Success criteria (Done + 487.66 + IMPORT-MARKER) remain UNMET across restart; tr
 ## Session handoff 2026-11-26 ~22:30 (main session context full)
 
 Main session stops here; repo clean at d6da507. Phase 4 (Dusk A v2 implementation, tickets 21-33) is owned by the OVERSEER session `dusk-overseer-glm53` (6cb2deab, glm 5.3 high) which spawns deepseek-v4-1-flash-1017 children per ticket. Note: a direct deepseek child t21-tokens-v2-chrome (e17f10e2) was started by main and then STOPPED BY THE USER before committing — working tree was clean, nothing lost; ticket 21 is still open, overseer should re-spawn it. Device rig unchanged (LAN URL exp://192.168.100.84:8081, app lock OFF, reminder ON, /tmp/uia.py + /tmp/addtx.py, screenshots /tmp/shots). OPEN issues: JSON import restart-persistence anomaly (see section above). Never push.
+
+## Ticket 21 status (2026-11-26 ~22:35)
+
+Ticket 21 (tokens v2 + tab dock + Button shadow) CODE COMPLETE and committed: 25fb4eb (tokens+contrast test), 51a7ae2 (Button shadows.button + architecture tripwire), db617ae (floating TabDock in app/(tabs)/_layout.tsx). Gates green at db617ae: tsc, eslint, jest 13 suites/69 tests, expo export android exit 0. Device-verified dark theme: /tmp/shots/91-dock-dark.png shows the dock + active pill, 0 logcat errors. Remaining for 21: light-theme on-device screenshot (token values already unit-tested in src/theme/__tests__/tokens.test.ts). Next frontier: tickets 22, 23, 24, 25, 26, 30, 32 (21 done). Overseer dusk-overseer-glm53 (6cb2deab) owns spawning deepseek children from here.
