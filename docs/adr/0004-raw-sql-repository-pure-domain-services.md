@@ -1,0 +1,3 @@
+# Raw SQL repository over expo-sqlite; pure domain services; Jest tests at the domain seam
+
+Instead of an ORM, the app uses hand-written SQL in a thin repository layer over expo-sqlite. Above it sit pure TypeScript domain services (accounts/transfers, budgets, recurring rules, report aggregation) that operate on plain data and carry all business logic. Unit tests target the domain services (the highest seam with real logic), not the database; the repository is thin CRUD whose SQL is exercised by running the app. This keeps the logic testable in plain Jest without mocking native modules, and avoids an ORM dependency that would take real effort to swap.

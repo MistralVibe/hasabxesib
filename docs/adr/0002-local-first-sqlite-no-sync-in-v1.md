@@ -1,0 +1,3 @@
+# Local-first: on-device SQLite, no accounts, no cloud sync in v1
+
+All data lives in an on-device SQLite database (via expo-sqlite). There are no user accounts and no backend in v1; sync is explicitly a later phase. Users can export CSV (for spreadsheets) and JSON (full backup) and import a JSON backup via the share sheet. This is a real trade-off — multi-device sync is the most requested feature in this category — chosen so v1 ships without infrastructure, works fully offline, and keeps financial data on the user's device by default. The schema and repository layer are built so a sync engine can be added later without migrating the domain model.
