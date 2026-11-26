@@ -162,6 +162,11 @@ export const en = {
     noData: 'No data for this month',
     incomeLabel: 'Income',
     expenseLabel: 'Expenses',
+    a11yByCategory: 'Spending by category, total {total}, top: {category} {percent}%',
+    a11yByCategoryEmpty: 'Spending by category, no data for this month',
+    a11yIncomeExpense: 'Income vs expenses, last 12 months: income {income}, expenses {expense}',
+    a11yTrend: 'Spending trend, last 12 months: lowest {min}, highest {max}',
+    a11yTrendEmpty: 'Spending trend, no data for the last 12 months',
   },
   accounts: {
     title: 'Accounts',

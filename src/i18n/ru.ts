@@ -164,6 +164,11 @@ export const ru: Dictionary = {
     noData: 'За этот месяц данных нет',
     incomeLabel: 'Доходы',
     expenseLabel: 'Расходы',
+    a11yByCategory: 'Траты по категориям, всего {total}, главная: {category} {percent}%',
+    a11yByCategoryEmpty: 'Траты по категориям, за этот месяц данных нет',
+    a11yIncomeExpense: 'Доходы и расходы, последние 12 месяцев: доходы {income}, расходы {expense}',
+    a11yTrend: 'Динамика трат, последние 12 месяцев: минимум {min}, максимум {max}',
+    a11yTrendEmpty: 'Динамика трат, за последние 12 месяцев данных нет',
   },
   accounts: {
     title: 'Счета',

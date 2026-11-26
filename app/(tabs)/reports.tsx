@@ -11,14 +11,21 @@ import { useI18n } from '@/i18n';
 import { useShallow } from 'zustand/react/shallow';
 import { useDataStore } from '@/stores/useDataStore';
 import { useFormatters } from '@/hooks/useFormatters';
+import { useCategoryLabel } from '@/hooks/useCategoryLabel';
 import { biggestTransactions, monthlyIncomeExpense, spendingByCategory, spendingTrend } from '@/domain/reports';
 import { addMonths, monthKeyOf, startOfDayISO } from '@/domain/dates';
-import { Category, Transaction } from '@/domain/types';
+import { Transaction } from '@/domain/types';
 
 const WINDOW_MONTHS = 12;
 const DONUT_SIZE = 184;
 const DONUT_THICKNESS = 16;
 const DONUT_TICKS = 132;
+/**
+ * Ring and legend both stop at five categories (no-pie-overuse); the ring
+ * normalises shares over the slices it receives, so it always closes exactly.
+ */
+const DONUT_MAX_SLICES = 5;
+const TREND_HEIGHT = 124;
 
 /** "March 2025" in the active language, built from the month key. */
 const monthFmtCache = new Map<string, Intl.DateTimeFormat>();
@@ -43,11 +50,6 @@ function shortMonth(key: string, locale: string): string {
   return monthFormatter(locale, 'short').format(new Date(year, month - 1, 1));
 }
 
-function categoryLabel(t: ReturnType<typeof useI18n>['t'], category: Category): string {
-  if (!category.nameKey) return category.name;
-  return t(category.nameKey as never, undefined) || category.name;
-}
-
 /**
  * Donut drawn as a ring of colored ticks. Two reasons it is not victory-native:
  * the library needs react-native-skia (a peer that is not part of this app's
@@ -58,10 +60,12 @@ function Donut({
   slices,
   centerLabel,
   centerCaption,
+  accessibilityLabel,
 }: {
   slices: { color: string; share: number }[];
   centerLabel: string;
   centerCaption: string;
+  accessibilityLabel: string;
 }) {
   const { theme } = useTheme();
   const dots = useMemo(() => {
@@ -94,7 +98,13 @@ function Donut({
   }, [slices]);
 
   return (
-    <View style={[styles.donut, { width: DONUT_SIZE, height: DONUT_SIZE }]}>
+    <View
+      // The ring is pure Views, so TalkBack needs the summary to describe it.
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={accessibilityLabel}
+      style={[styles.donut, { width: DONUT_SIZE, height: DONUT_SIZE }]}
+    >
       {dots.map((dot, i) => (
         <View
           key={i}
@@ -136,6 +146,7 @@ function IncomeExpenseChart({
   height = 132,
   axisColor,
   labelColor,
+  accessibilityLabel,
 }: {
   series: { income: number; expense: number }[];
   labels: string[];
@@ -144,11 +155,12 @@ function IncomeExpenseChart({
   height?: number;
   axisColor: string;
   labelColor: string;
+  accessibilityLabel: string;
 }) {
   const max = Math.max(1, ...series.flatMap((m) => [m.income, m.expense]));
   const barHeight = (value: number) => (value > 0 ? Math.max(2, (value / max) * height) : 0);
   return (
-    <View>
+    <View accessible accessibilityRole="image" accessibilityLabel={accessibilityLabel}>
       <View style={[styles.barArea, { height }]}>
         {series.map((m, i) => (
           <View key={i} style={styles.barGroup}>
@@ -175,11 +187,13 @@ function IncomeExpenseChart({
 function TrendChart({
   values,
   color,
-  height = 124,
+  height = TREND_HEIGHT,
+  accessibilityLabel,
 }: {
   values: number[];
   color: string;
   height?: number;
+  accessibilityLabel: string;
 }) {
   const { theme } = useTheme();
   const [width, setWidth] = useState(0);
@@ -196,7 +210,13 @@ function TrendChart({
   }, [values, width, max, height]);
 
   return (
-    <View style={{ height }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+    <View
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={accessibilityLabel}
+      style={{ height }}
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+    >
       {points.slice(1).map((point, i) => {
         const prev = points[i];
         const dx = point.x - prev.x;
@@ -237,6 +257,7 @@ export default function ReportsScreen() {
   const { theme } = useTheme();
   const { t, language } = useI18n();
   const { money, signed } = useFormatters();
+  const categoryLabel = useCategoryLabel();
   const { transactions, categories } = useDataStore(
     useShallow((s) => ({ transactions: s.transactions, categories: s.categories })),
   );
@@ -250,9 +271,10 @@ export default function ReportsScreen() {
     () => spendingByCategory(transactions, categories, monthKey),
     [transactions, categories, monthKey],
   );
+  const donutRows = useMemo(() => byCategory.slice(0, DONUT_MAX_SLICES), [byCategory]);
   const donutSlices = useMemo(
-    () => byCategory.map((row) => ({ color: row.category.color, share: row.share })),
-    [byCategory],
+    () => donutRows.map((row) => ({ color: row.category.color, share: row.share })),
+    [donutRows],
   );
   const monthly = useMemo(
     () => monthlyIncomeExpense(transactions, monthKey, WINDOW_MONTHS),
@@ -265,12 +287,38 @@ export default function ReportsScreen() {
   const hasMonthData = byCategory.length > 0;
   const hasWindowData = monthly.some((m) => m.income > 0 || m.expense > 0);
   const monthExpense = byCategory.reduce((sum, row) => sum + row.amount, 0);
+  const windowIncome = monthly.reduce((sum, m) => sum + m.income, 0);
+  const windowExpense = monthly.reduce((sum, m) => sum + m.expense, 0);
+  const trendTop = Math.max(1, ...trendValues);
+  // The axis is drawn from a zero baseline, so the spoken summary reports the
+  // lowest month that actually has spending rather than the empty months.
+  const trendSpendMonths = trendValues.filter((value) => value > 0);
+  const trendLow = trendSpendMonths.length > 0 ? Math.min(...trendSpendMonths) : 0;
+  const trendHigh = trendSpendMonths.length > 0 ? Math.max(...trendSpendMonths) : 0;
 
   const c = theme.colors;
   const canGoNext = monthKey < thisMonth;
   const monthText = t('dates.monthYear', { month: monthLabel(monthKey, localeTag), year: monthKey.slice(0, 4) });
 
   const categoryById = (id: string) => categories.find((cat) => cat.id === id);
+
+  // Screen-reader summaries: the charts are pure Views, so each one carries a
+  // spoken description of what it draws and the numbers behind it.
+  const topRow = donutRows[0];
+  const donutSummary = topRow
+    ? t('reports.a11yByCategory', {
+        total: money(monthExpense),
+        category: categoryLabel(topRow.category),
+        percent: Math.round(topRow.share * 100),
+      })
+    : t('reports.a11yByCategoryEmpty');
+  const incomeExpenseSummary = t('reports.a11yIncomeExpense', {
+    income: money(windowIncome),
+    expense: money(windowExpense),
+  });
+  const trendSummary = hasWindowData
+    ? t('reports.a11yTrend', { min: money(trendLow), max: money(trendHigh) })
+    : t('reports.a11yTrendEmpty');
 
   return (
     <Screen>
@@ -305,7 +353,24 @@ export default function ReportsScreen() {
               slices={donutSlices}
               centerLabel={money(monthExpense)}
               centerCaption={t('reports.expenseLabel')}
+              accessibilityLabel={donutSummary}
             />
+            <View style={styles.donutLegend}>
+              {donutRows.map((row) => (
+                <View key={row.category.id} style={styles.donutLegendItem}>
+                  <View style={[styles.chartLegendDot, { backgroundColor: row.category.color }]} />
+                  <Text
+                    numberOfLines={1}
+                    style={[styles.donutLegendName, { color: c.text, fontSize: theme.type.caption }]}
+                  >
+                    {categoryLabel(row.category)}
+                  </Text>
+                  <Text style={{ color: c.textSecondary, fontSize: theme.type.caption, fontWeight: '700' }}>
+                    {Math.round(row.share * 100)}%
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
         ) : (
           <EmptyState icon="pie-chart-outline" title={t('reports.noData')} />
@@ -320,7 +385,7 @@ export default function ReportsScreen() {
               <CategoryIcon icon={row.category.icon} color={row.category.color} />
               <View style={styles.flex}>
                 <Text style={{ color: c.text, fontSize: theme.type.body, fontWeight: '600' }}>
-                  {categoryLabel(t, row.category)}
+                  {categoryLabel(row.category)}
                 </Text>
                 <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>
                   {t('reports.ofTotal', { percent: Math.round(row.share * 100) })}
@@ -354,13 +419,41 @@ export default function ReportsScreen() {
           expenseColor={c.expense}
           axisColor={c.border}
           labelColor={c.textSecondary}
+          accessibilityLabel={incomeExpenseSummary}
         />
       </Card>
 
       <Card style={styles.card}>
         <SectionTitle title={t('reports.trend')} />
         {hasWindowData ? (
-          <TrendChart values={trendValues} color={c.accent} />
+          <View style={styles.trendRow}>
+            <View style={[styles.trendAxis, { height: TREND_HEIGHT }]}>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                style={[styles.trendAxisLabel, { color: c.textSecondary }]}
+              >
+                {money(trendTop)}
+              </Text>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                style={[styles.trendAxisLabel, { color: c.textSecondary }]}
+              >
+                {money(0)}
+              </Text>
+            </View>
+            <View style={styles.flex}>
+              <TrendChart
+                values={trendValues}
+                color={c.accent}
+                height={TREND_HEIGHT}
+                accessibilityLabel={trendSummary}
+              />
+            </View>
+          </View>
         ) : (
           <EmptyState icon="trending-down-outline" title={t('reports.noData')} />
         )}
@@ -376,10 +469,10 @@ export default function ReportsScreen() {
                 {category ? <CategoryIcon icon={category.icon} color={category.color} /> : null}
                 <View style={styles.flex}>
                   <Text numberOfLines={1} style={{ color: c.text, fontSize: theme.type.body, fontWeight: '600' }}>
-                    {tx.note || (category ? categoryLabel(t, category) : '')}
+                    {tx.note || (category ? categoryLabel(category) : '')}
                   </Text>
                   <Text style={{ color: c.textSecondary, fontSize: theme.type.caption }}>
-                    {category ? categoryLabel(t, category) : ''} · {tx.date}
+                    {category ? categoryLabel(category) : ''} · {tx.date}
                   </Text>
                 </View>
                 <Text style={{ color: c.expense, fontSize: theme.type.body, fontWeight: '700' }}>
@@ -405,6 +498,10 @@ const styles = StyleSheet.create({
   donut: { alignItems: 'center', justifyContent: 'center' },
   donutTick: { position: 'absolute' },
   donutCenter: { position: 'absolute', width: DONUT_SIZE - DONUT_THICKNESS * 4, alignItems: 'center' },
+  donutLegend: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 8, columnGap: 12, marginTop: 14, alignSelf: 'stretch' },
+  donutLegendItem: { flexDirection: 'row', alignItems: 'center', gap: 6, width: '47%' },
+  donutLegendName: { flexShrink: 1, fontWeight: '600' },
+  chartLegendDot: { width: 8, height: 8, borderRadius: 4, borderCurve: 'continuous' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
   flex: { flex: 1 },
   legend: { flexDirection: 'row', gap: 16, marginTop: 6, marginBottom: 10 },
@@ -417,6 +514,9 @@ const styles = StyleSheet.create({
   axis: { height: StyleSheet.hairlineWidth, marginTop: 4 },
   axisRow: { flexDirection: 'row', marginTop: 4 },
   axisLabel: { flex: 1, textAlign: 'center', fontSize: 9 },
+  trendRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  trendAxis: { width: 58, justifyContent: 'space-between', alignItems: 'flex-end', paddingRight: 6, paddingVertical: 8 },
+  trendAxisLabel: { fontSize: 9, fontWeight: '600' },
   lineSegment: { position: 'absolute' },
   lineDot: { position: 'absolute', width: 6, height: 6, borderRadius: 3, borderCurve: 'continuous', borderWidth: 1 },
 });
