@@ -29,6 +29,11 @@ Build HasabXesib, a cross-platform (iOS+Android) personal budget tracker, direct
 4. Delegate disjoint UI tickets to child sessions (model deepseek-v4-1-flash-1017) when safe; otherwise implement sequentially here.
 5. End: full `tsc` + jest + eslint green, then code-review skill vs `2c223f7`, fix findings, final commit + summary.
 
+## Resilience (user's internet is slow/flaky)
+- Commit to git after every meaningful step (done per ticket; latest commit is the resume point).
+- This HANDOFF.md is updated at each phase boundary; a fresh session should read it first, then `git log`.
+- npm registry is slow (fetches 25-50s each); run installs as background processes and poll with tools.process.output.
+
 ## Environment
 - Node v24.15.0, npm 11.12.1, network OK (npm registry reachable). Latest versions seen: expo 58.0.26, expo-router 58.0.32, zustand 5.1.0, victory-native 43.1.0, jest-expo 58.0.15.
 - Skills available to load via `skill` tool: grilling, domain-modeling, tdd, code-review, prototype, research, codebase-design, vercel-react-native-skills, react-native-architecture, node-project-commands, diagnosing-bugs. The ask-matt flow skills (to-spec/to-tickets/implement/...) are NOT loadable; their SKILL.md files live under `.agents/skills/` and were read manually.
