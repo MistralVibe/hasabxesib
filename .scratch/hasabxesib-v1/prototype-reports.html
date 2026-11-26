@@ -1,5 +1,15 @@
 <!doctype html>
-<!-- PROTOTYPE — throwaway. Not production code. Not part of the app. -->
+<!-- PROTOTYPE — throwaway. Not production code. Not part of the app.
+
+  Reports tab, Dusk A v2. Charts are hand-built per ADR-0005 (no chart/svg
+  libs, no canvas, no blur):
+  - Donut = ring of fat rounded dashes, one View per dash (the app's real
+    tick-donut technique, embraced as the visual signature).
+  - Income/expense bars = plain divs with linear-gradient fills.
+  - Trend = a smooth SVG path here for FIDELITY ONLY; the RN build
+    approximates the 2px line with rotated 2px views and the area fill
+    with a few stacked translucent accent views (18% -> 0).
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -29,6 +39,7 @@
   .rep {
     --bg: #0B0E1A; --surface: #151A2E; --surface2: #1B2140; --text: #EEF0FF; --text2: #8B93B8;
     --accent: #818CF8; --accent2: #C084FC; --income: #34D399; --expense: #FB7185;
+    --incSoft: rgba(52,211,153,.25); --expSoft: rgba(251,113,133,.25);
     --hair: rgba(255,255,255,.07);
     background: var(--bg); color: var(--text);
     display: flex; flex-direction: column; height: 100%;
@@ -36,6 +47,7 @@
   .rep.light {
     --bg: #F2F3FB; --surface: #FFFFFF; --surface2: #F4F4FE; --text: #14162B; --text2: #63687F;
     --accent: #4F46E5; --accent2: #7C3AED; --income: #047857; --expense: #BE123C;
+    --incSoft: rgba(4,120,87,.2); --expSoft: rgba(190,18,60,.2);
     --hair: rgba(20,22,43,.08);
   }
   .rep .statusbar { height: 44px; flex: none; display: flex; align-items: flex-end;
@@ -76,6 +88,13 @@
   .rep .mbtn[disabled] { opacity: .3; cursor: default; }
   .rep .mlabel { flex: 1; text-align: center; font-size: 16px; font-weight: 700; letter-spacing: -.2px; }
 
+  /* — cashflow strip — */
+  .rep .cash { display: flex; gap: 8px; margin: 10px 18px 0; }
+  .rep .cchip { flex: 1; background: var(--surface2); border: 1px solid var(--hair);
+    border-radius: 16px; padding: 9px 12px; }
+  .rep .cchip .l { font-size: 10px; font-weight: 700; letter-spacing: .8px; color: var(--text2); }
+  .rep .cchip .v { font-size: 15px; font-weight: 800; margin-top: 2px; letter-spacing: -.3px; }
+
   /* — cards — */
   .rep .card {
     margin: 14px 18px 0; background: var(--surface); border: 1px solid var(--hair);
@@ -86,50 +105,72 @@
   .rep .card .cap { font-size: 13px; color: var(--text2); margin-top: 3px; }
   .rep .last { margin-bottom: 26px; }
 
-  /* — donut + legend — */
-  .rep .donutwrap { display: flex; justify-content: center; padding: 18px 0 6px; }
-  .rep .donutwrap svg { filter: drop-shadow(0 6px 18px rgba(129,140,248,.28)); }
-  .rep.light .donutwrap svg { filter: none; }
-  .rep .donut { position: relative; width: 168px; height: 168px; }
-  .rep .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column;
+  /* — dashed-ring donut (activity-ring look; one dash = one RN View) — */
+  .rep .donutwrap { display: flex; justify-content: center; padding: 20px 0 10px; }
+  .rep .donut { position: relative; width: 168px; height: 168px;
+    filter: drop-shadow(0 6px 18px rgba(129,140,248,.25)); }
+  .rep.light .donut { filter: none; }
+  .rep .dtrack { position: absolute; left: 9px; top: 9px; width: 150px; height: 150px;
+    border: 7px solid var(--hair); border-radius: 999px; }
+  .rep .dash { position: absolute; left: 84px; top: 84px; width: 10px; height: 7px;
+    margin: -3.5px 0 0 -5px; border-radius: 999px; }
+  .rep .dcenter { position: absolute; inset: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; }
-  .rep .donut-center b { font-size: 24px; font-weight: 800; letter-spacing: -.5px; }
-  .rep .donut-center span { font-size: 12px; color: var(--text2); font-weight: 600; margin-top: 2px; }
-  .rep .legend { margin-top: 8px; }
-  .rep .lrow { display: flex; align-items: center; gap: 11px; padding: 9px 0;
-    border-bottom: 1px solid var(--hair); }
-  .rep .lrow:last-child { border-bottom: none; padding-bottom: 0; }
+  .rep .dcenter b { font-size: 26px; font-weight: 800; letter-spacing: -.5px; }
+  .rep .dcenter .cap2 { font-size: 12px; color: var(--text2); font-weight: 600; margin-top: 2px; }
+  .rep .vschip { margin-top: 9px; display: inline-flex; align-items: center;
+    background: rgba(52,211,153,.16); color: #34D399; border-radius: 999px;
+    padding: 3px 9px; font-size: 11px; font-weight: 700; }
+  .rep.light .vschip { background: rgba(4,120,87,.1); color: #047857; }
+
+  /* — top categories progress rows (doubles as the donut legend) — */
+  .rep .crow { margin-top: 13px; }
+  .rep .crow:first-of-type { margin-top: 14px; }
+  .rep .crowl { display: flex; align-items: center; gap: 10px; }
   .rep .ldot { width: 10px; height: 10px; border-radius: 999px; flex: none; }
-  .rep .lrow .nm { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis; }
-  .rep .lrow .am { font-size: 15px; font-weight: 700; }
-  .rep .lrow .pc { width: 44px; text-align: right; font-size: 13px; font-weight: 600; color: var(--text2); }
+  .rep .crowl .nm { flex: 1; font-size: 15px; font-weight: 600; }
+  .rep .crowl .am { font-size: 15px; font-weight: 700; }
+  .rep .ctrack { height: 6px; border-radius: 999px; background: var(--hair);
+    margin: 8px 0 0 20px; overflow: hidden; }
+  .rep .ctrack i { display: block; height: 100%; border-radius: 999px; }
+  .rep .cpct { font-size: 11px; font-weight: 600; color: var(--text2); margin: 5px 0 0 20px;
+    text-align: right; }
 
   /* — income vs expenses bars — */
   .rep .trow { display: flex; align-items: baseline; justify-content: space-between; }
   .rep .legend-inline { display: flex; gap: 14px; font-size: 13px; color: var(--text2); }
   .rep .legend-inline em { font-style: normal; display: inline-flex; align-items: center; gap: 6px; }
   .rep .legend-inline i { width: 9px; height: 9px; border-radius: 999px; display: inline-block; }
-  .rep .bararea { display: flex; align-items: flex-end; gap: 2px; height: 132px; margin-top: 14px; }
-  .rep .bargroup { flex: 1; display: flex; justify-content: center; align-items: flex-end; gap: 2px;
-    opacity: .45; }
+  .rep .chart { position: relative; height: 150px; margin-top: 14px; }
+  .rep .gline { position: absolute; left: 36px; right: 0; height: 1px; background: var(--hair); }
+  .rep .glab { position: absolute; left: 0; width: 32px; font-size: 9px; font-weight: 600;
+    color: var(--text2); line-height: 1; }
+  .rep .bararea { position: absolute; left: 36px; right: 0; top: 0; bottom: 0;
+    display: flex; align-items: flex-end; gap: 2px; }
+  .rep .bargroup { flex: 1; display: flex; justify-content: center; align-items: flex-end;
+    gap: 2px; opacity: .4; }
   .rep .bargroup.now { opacity: 1; }
-  .rep .bar { width: 5px; border-radius: 2px 2px 0 0; }
+  .rep .bcol { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+  .rep .blab { font-size: 9px; font-weight: 700; margin-bottom: 3px; line-height: 1; }
+  .rep .bar { width: 9px; border-radius: 3px 3px 0 0; }
+  .rep .bar.i { background: linear-gradient(to top, var(--incSoft), var(--income)); }
+  .rep .bar.e { background: linear-gradient(to top, var(--expSoft), var(--expense)); }
   .rep .axis { height: 1px; background: var(--hair); margin-top: 4px; }
-  .rep .axisrow { display: flex; margin-top: 6px; }
+  .rep .axisrow { display: flex; margin: 6px 0 0 36px; }
   .rep .axisrow span { flex: 1; text-align: center; font-size: 9px; font-weight: 600; color: var(--text2); }
   .rep .axisrow span.now { color: var(--text); font-weight: 800; }
 
-  /* — spending trend (dots + rotated segments, all hand-placed) — */
-  .rep .trendwrap { position: relative; width: 302px; height: 128px; margin: 16px auto 4px; }
-  .rep .tgrid { position: absolute; left: 0; right: 0; height: 1px; background: var(--hair); }
+  /* — spending trend (smooth path mock; RN: rotated 2px segments + stacked
+     translucent accent views for the area) — */
+  .rep .trendwrap { position: relative; width: 302px; height: 148px; margin: 16px auto 6px; }
+  .rep .tgrid { position: absolute; left: 20px; right: 4px; height: 1px; background: var(--hair); }
   .rep .tlab { position: absolute; left: 0; width: 16px; font-size: 9px; font-weight: 600;
     color: var(--text2); line-height: 1; }
-  .rep .seg { position: absolute; height: 2px; border-radius: 2px; background: var(--accent); }
-  .rep .tdot { position: absolute; width: 6px; height: 6px; border-radius: 999px;
-    background: var(--accent); border: 1px solid var(--surface); }
-  .rep .tdot.now { width: 9px; height: 9px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
-    box-shadow: 0 0 0 4px rgba(129,140,248,.18); border-width: 2px; }
+  .rep .stopA { stop-color: var(--accent); }
+  .rep .tchip { position: absolute; top: -2px; right: 40px; background: var(--surface2);
+    border: 1px solid var(--hair); border-radius: 999px; padding: 4px 9px;
+    font-size: 11px; font-weight: 700; }
+  .rep .tchip b { font-weight: 800; letter-spacing: -.2px; }
 
   /* — biggest transactions (Home-style tx rows, one surface) — */
   .rep .txs { margin-top: 8px; }
@@ -181,7 +222,7 @@
 </head>
 <body>
   <h1>HasabXesib — Reports tab prototype</h1>
-  <div class="sub">Dusk A v2 · ☀/☾ toggles theme · throwaway mockup — no blur, no chart libs, RN-implementable</div>
+  <div class="sub">Dusk A v2 · v2 charts (dashed donut ring, gradient bars, smooth trend) · ☀/☾ toggles theme · throwaway mockup, RN-implementable</div>
 
   <div class="phone"><div class="screen">
     <div class="rep anim" id="rep">
@@ -209,36 +250,56 @@
           </button>
         </div>
 
-        <!-- spending by category -->
+        <!-- cashflow strip -->
+        <div class="cash rise tabnum" style="animation-delay:.06s">
+          <div class="cchip"><div class="l">IN</div><div class="v" style="color:var(--income)">3,000.00</div></div>
+          <div class="cchip"><div class="l">OUT</div><div class="v" style="color:var(--expense)">668.00</div></div>
+          <div class="cchip"><div class="l">NET</div><div class="v">+2,332.00</div></div>
+        </div>
+
+        <!-- spending by category: dashed activity ring -->
         <div class="card rise" style="animation-delay:.12s">
           <h3>Spending by category</h3>
           <div class="donutwrap">
             <div class="donut">
-              <!-- largest slice (Health) starts at 12 o'clock; segments = category colors -->
-              <svg width="168" height="168" viewBox="0 0 168 168">
-                <circle cx="84" cy="84" r="75" fill="none" stroke="var(--hair)" stroke-width="18"/>
-                <circle cx="84" cy="84" r="75" fill="none" stroke="#FB7185" stroke-width="18"
-                        stroke-dasharray="251.97 471.24" transform="rotate(-90 84 84)"/>
-                <circle cx="84" cy="84" r="75" fill="none" stroke="#F59E0B" stroke-width="18"
-                        stroke-dasharray="105.89 471.24" transform="rotate(104.4 84 84)"/>
-                <circle cx="84" cy="84" r="75" fill="none" stroke="#C084FC" stroke-width="18"
-                        stroke-dasharray="58.76 471.24" transform="rotate(187.2 84 84)"/>
-                <circle cx="84" cy="84" r="75" fill="none" stroke="#38BDF8" stroke-width="18"
-                        stroke-dasharray="44.62 471.24" transform="rotate(234 84 84)"/>
-              </svg>
-              <div class="donut-center"><b class="tabnum">668.00</b><span>spent</span></div>
+              <div class="dtrack"></div>
+              <div id="dring"></div>
+              <div class="dcenter">
+                <b class="tabnum">668.00</b>
+                <span class="cap2">spent</span>
+                <span class="vschip tabnum">▲ 12% vs Oct</span>
+              </div>
             </div>
           </div>
-          <div class="legend tabnum">
-            <div class="lrow"><span class="ldot" style="background:#F59E0B"></span><span class="nm">Food &amp; dining</span><span class="am">156.80</span><span class="pc">23%</span></div>
-            <div class="lrow"><span class="ldot" style="background:#FB7185"></span><span class="nm">Health</span><span class="am">360.00</span><span class="pc">54%</span></div>
-            <div class="lrow"><span class="ldot" style="background:#38BDF8"></span><span class="nm">Transport</span><span class="am">66.20</span><span class="pc">10%</span></div>
-            <div class="lrow"><span class="ldot" style="background:#C084FC"></span><span class="nm">Entertainment</span><span class="am">85.00</span><span class="pc">13%</span></div>
+        </div>
+
+        <!-- top categories: progress rows = the donut's legend -->
+        <div class="card rise" style="animation-delay:.18s">
+          <h3>Top categories</h3>
+          <div class="crow">
+            <div class="crowl"><span class="ldot" style="background:#FB7185"></span><span class="nm">Health</span><span class="am tabnum">360.00</span></div>
+            <div class="ctrack"><i style="width:54%; background:#FB7185"></i></div>
+            <div class="cpct tabnum">54% of total</div>
+          </div>
+          <div class="crow">
+            <div class="crowl"><span class="ldot" style="background:#F59E0B"></span><span class="nm">Food &amp; dining</span><span class="am tabnum">156.80</span></div>
+            <div class="ctrack"><i style="width:23%; background:#F59E0B"></i></div>
+            <div class="cpct tabnum">23% of total</div>
+          </div>
+          <div class="crow">
+            <div class="crowl"><span class="ldot" style="background:#C084FC"></span><span class="nm">Entertainment</span><span class="am tabnum">85.00</span></div>
+            <div class="ctrack"><i style="width:13%; background:#C084FC"></i></div>
+            <div class="cpct tabnum">13% of total</div>
+          </div>
+          <div class="crow">
+            <div class="crowl"><span class="ldot" style="background:#38BDF8"></span><span class="nm">Transport</span><span class="am tabnum">66.20</span></div>
+            <div class="ctrack"><i style="width:10%; background:#38BDF8"></i></div>
+            <div class="cpct tabnum">10% of total</div>
           </div>
         </div>
 
         <!-- income vs expenses -->
-        <div class="card rise" style="animation-delay:.18s">
+        <div class="card rise" style="animation-delay:.24s">
           <div class="trow">
             <h3>Income vs expenses</h3>
             <div class="legend-inline">
@@ -247,66 +308,71 @@
             </div>
           </div>
           <div class="cap">Last 12 months</div>
-          <div class="bararea tabnum">
-            <div class="bargroup"><i class="bar" style="height:9.2px; background:var(--expense)"></i></div>
-            <div class="bargroup"><i class="bar" style="height:7.9px; background:var(--expense)"></i></div>
-            <div class="bargroup"><i class="bar" style="height:11.4px; background:var(--expense)"></i></div>
-            <div class="bargroup"><i class="bar" style="height:13.2px; background:var(--income)"></i><i class="bar" style="height:10.6px; background:var(--expense)"></i></div>
-            <div class="bargroup"><i class="bar" style="height:8.4px; background:var(--expense)"></i></div>
-            <div class="bargroup"><i class="bar" style="height:14.1px; background:var(--expense)"></i></div>
-            <div class="bargroup"><i class="bar" style="height:13.2px; background:var(--income)"></i><i class="bar" style="height:6.6px; background:var(--expense)"></i></div>
-            <div class="bargroup"><i class="bar" style="height:12.3px; background:var(--expense)"></i></div>
-            <div class="bargroup"><i class="bar" style="height:10.1px; background:var(--expense)"></i></div>
-            <div class="bargroup"><i class="bar" style="height:13.2px; background:var(--income)"></i><i class="bar" style="height:15px; background:var(--expense)"></i></div>
-            <div class="bargroup"><i class="bar" style="height:12.8px; background:var(--expense)"></i></div>
-            <div class="bargroup now"><i class="bar" style="height:132px; background:var(--income)"></i><i class="bar" style="height:29.4px; background:var(--expense)"></i></div>
+          <div class="chart tabnum">
+            <div class="gline" style="top:32px"></div>
+            <div class="gline" style="top:91px"></div>
+            <span class="glab" style="top:28px">3,000</span>
+            <span class="glab" style="top:87px">1,500</span>
+            <div class="bararea">
+              <div class="bargroup"><i class="bar e" style="height:8.2px"></i></div>
+              <div class="bargroup"><i class="bar e" style="height:7.1px"></i></div>
+              <div class="bargroup"><i class="bar e" style="height:10.2px"></i></div>
+              <div class="bargroup"><i class="bar i" style="height:11.8px"></i><i class="bar e" style="height:9.5px"></i></div>
+              <div class="bargroup"><i class="bar e" style="height:7.5px"></i></div>
+              <div class="bargroup"><i class="bar e" style="height:12.6px"></i></div>
+              <div class="bargroup"><i class="bar i" style="height:11.8px"></i><i class="bar e" style="height:5.9px"></i></div>
+              <div class="bargroup"><i class="bar e" style="height:11px"></i></div>
+              <div class="bargroup"><i class="bar e" style="height:9px"></i></div>
+              <div class="bargroup"><i class="bar i" style="height:11.8px"></i><i class="bar e" style="height:13.4px"></i></div>
+              <div class="bargroup"><i class="bar e" style="height:11.4px"></i></div>
+              <div class="bargroup now">
+                <div class="bcol"><span class="blab" style="color:var(--income)">3,000</span><i class="bar i" style="height:118px"></i></div>
+                <div class="bcol"><span class="blab" style="color:var(--expense)">668</span><i class="bar e" style="height:26.3px"></i></div>
+              </div>
+            </div>
           </div>
           <div class="axis"></div>
-          <div class="axisrow tabnum">
+          <div class="axisrow">
             <span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span>
             <span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span class="now">Nov</span>
           </div>
         </div>
 
-        <!-- spending trend: 12 hand-placed dots + rotated 2px segments -->
-        <div class="card rise" style="animation-delay:.24s">
+        <!-- spending trend: smooth path for fidelity; RN = rotated segments + stacked views -->
+        <div class="card rise" style="animation-delay:.3s">
           <h3>Spending trend</h3>
           <div class="cap">Last 12 months</div>
           <div class="trendwrap tabnum">
-            <div class="tgrid" style="top:8px"></div>
-            <div class="tgrid" style="top:94.9px"></div>
-            <div class="tlab" style="top:4px">668</div>
-            <div class="tlab" style="top:90.9px">150</div>
-            <!-- segments -->
-            <i class="seg" style="width:24.5px;  left:19.7px;  top:86.3px;  transform:rotate(11.8deg)"></i>
-            <i class="seg" style="width:27.5px;  left:42.3px;  top:82.1px;  transform:rotate(-29.2deg)"></i>
-            <i class="seg" style="width:24.2px;  left:67.9px;  top:77.1px;  transform:rotate(8.1deg)"></i>
-            <i class="seg" style="width:25.2px;  left:91.4px;  top:83px;    transform:rotate(19.1deg)"></i>
-            <i class="seg" style="width:32.5px;  left:111.7px; top:76.2px;  transform:rotate(-42.2deg)"></i>
-            <i class="seg" style="width:37.4px;  left:133.3px; top:79.6px;  transform:rotate(50deg)"></i>
-            <i class="seg" style="width:32.5px;  left:159.7px; top:83px;    transform:rotate(-42.2deg)"></i>
-            <i class="seg" style="width:25.2px;  left:187.4px; top:76.3px;  transform:rotate(19.1deg)"></i>
-            <i class="seg" style="width:30.2px;  left:208.9px; top:71.2px;  transform:rotate(-37.5deg)"></i>
-            <i class="seg" style="width:25.4px;  left:235.3px; top:66.2px;  transform:rotate(19.3deg)"></i>
-            <i class="seg" style="width:67.8px;  left:238.1px; top:38.7px;  transform:rotate(-69.2deg)"></i>
-            <!-- dots -->
-            <i class="tdot" style="left:17px;  top:81.8px"></i>
-            <i class="tdot" style="left:41px;  top:86.8px"></i>
-            <i class="tdot" style="left:65px;  top:73.4px"></i>
-            <i class="tdot" style="left:89px;  top:76.8px"></i>
-            <i class="tdot" style="left:113px; top:85.1px"></i>
-            <i class="tdot" style="left:137px; top:63.3px"></i>
-            <i class="tdot" style="left:161px; top:91.9px"></i>
-            <i class="tdot" style="left:185px; top:70.1px"></i>
-            <i class="tdot" style="left:209px; top:78.4px"></i>
-            <i class="tdot" style="left:233px; top:60px"></i>
-            <i class="tdot" style="left:257px; top:68.4px"></i>
-            <i class="tdot now" style="left:279.5px; top:3.5px"></i>
+            <div class="tgrid" style="top:28px"></div>
+            <div class="tgrid" style="top:72.9px"></div>
+            <div class="tgrid" style="top:114.9px"></div>
+            <span class="tlab" style="top:24px">668</span>
+            <span class="tlab" style="top:68.9px">400</span>
+            <span class="tlab" style="top:110.9px">150</span>
+            <svg width="302" height="148" viewBox="0 0 302 148">
+              <defs>
+                <linearGradient id="areaG" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" class="stopA" stop-opacity=".18"/>
+                  <stop offset="1" class="stopA" stop-opacity="0"/>
+                </linearGradient>
+                <radialGradient id="haloG">
+                  <stop offset="0" class="stopA" stop-opacity=".35"/>
+                  <stop offset="1" class="stopA" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+              <path id="tarea" fill="url(#areaG)"/>
+              <path id="tline" fill="none" stroke="var(--accent)" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="284" cy="28" r="17" fill="url(#haloG)"/>
+              <circle cx="284" cy="28" r="4.5" fill="var(--accent)"
+                      stroke="var(--surface)" stroke-width="2"/>
+            </svg>
+            <span class="tchip"><b>668.00</b> · Nov</span>
           </div>
         </div>
 
         <!-- biggest transactions -->
-        <div class="card last rise" style="animation-delay:.3s">
+        <div class="card last rise" style="animation-delay:.36s">
           <h3>Biggest transactions</h3>
           <div class="txs">
             <div class="tx">
@@ -347,8 +413,49 @@
 
 <script>
   var rep = document.getElementById('rep');
-  var themeBtn = document.getElementById('theme');
-  themeBtn.onclick = function () {
+
+  /* Dashed activity ring: 32 fat rounded dashes on a r=75 circle, one per
+     slice share (18 Health + 7 Food + 4 Entertainment + 3 Transport = 32).
+     Health (largest) starts at 12 o'clock. In RN each dash is a View with
+     rotate + translateY(-75) — exactly the real tick-donut math. */
+  (function buildRing() {
+    var colors = []
+      .concat(Array(18).fill('#FB7185'))
+      .concat(Array(7).fill('#F59E0B'))
+      .concat(Array(4).fill('#C084FC'))
+      .concat(Array(3).fill('#38BDF8'));
+    var ring = document.getElementById('dring');
+    for (var i = 0; i < 32; i++) {
+      var d = document.createElement('i');
+      d.className = 'dash';
+      d.style.background = colors[i];
+      d.style.transform = 'rotate(' + (i * 360 / 32) + 'deg) translateY(-75px)';
+      ring.appendChild(d);
+    }
+  })();
+
+  /* Trend: Catmull-Rom -> cubic bezier through the 12 monthly points
+     (same y math the real screen uses: y = 140 - v/668 * 112).
+     RN build: polyline of rotated 2px segment views, no path needed. */
+  (function buildTrend() {
+    var pts = [[20,104.8],[44,109.8],[68,96.4],[92,99.8],[116,108.1],[140,86.3],
+               [164,114.9],[188,93.1],[212,101.4],[236,83],[260,91.4],[284,28]];
+    function smooth(p) {
+      var d = 'M' + p[0][0] + ' ' + p[0][1];
+      for (var i = 0; i < p.length - 1; i++) {
+        var p0 = p[Math.max(0, i - 1)], p1 = p[i], p2 = p[i + 1], p3 = p[Math.min(p.length - 1, i + 2)];
+        d += 'C' + (p1[0] + (p2[0] - p0[0]) / 6) + ' ' + (p1[1] + (p2[1] - p0[1]) / 6) + ' '
+              + (p2[0] - (p3[0] - p1[0]) / 6) + ' ' + (p2[1] - (p3[1] - p1[1]) / 6) + ' '
+              + p2[0] + ' ' + p2[1];
+      }
+      return d;
+    }
+    var line = smooth(pts);
+    document.getElementById('tline').setAttribute('d', line);
+    document.getElementById('tarea').setAttribute('d', line + 'L284 140L20 140Z');
+  })();
+
+  document.getElementById('theme').onclick = function () {
     rep.classList.toggle('light');
     /* re-run the staggered entrance on every theme change */
     rep.classList.remove('anim');

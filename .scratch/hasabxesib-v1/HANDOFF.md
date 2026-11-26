@@ -32,3 +32,19 @@ Cross-platform (iOS+Android, Expo Go-compatible) personal budget tracker. Local-
 6. Known accepted deviations: hand-rolled charts (ADR-0005), form duplication transaction/recurring, `Money = number` unbranded.
 7. If output tokens approach ~300k, start a fresh session and hand off via this file (that's what this file is for).
 8. v2 candidates (only if user asks): per-account currencies, web target, cloud sync. Open question for user: none blocking; the double-"All" chips fix default (ticket 19 option 1) proceeds unless vetoed.
+
+## OPEN: JSON import on Android — read fixed, restart-persistence anomaly remains (2026-11-26 ~22:00, device RZCY91BGC2P)
+
+Fix committed at `6e610ed` (read path only): `copyToCacheDirectory: false` keeps the SAF `content://` uri; legacy `readAsStringAsync` reads content URIs via ContentResolver under the SAF grant — this BYPASSES Expo Go's `FilePermissionService`, which denies reads of the DocumentPicker cache copy (the "isn't readable" / "Missing 'READ' permission" errors). NOTE: `base64: true` is web-only in expo-document-picker 58.0.5 (the Android Kotlin module ignores the option, iOS too) — on Android the working path is the content:// fallback, not base64; the commit message overstates the base64 role.
+
+**What works on device now (verified, 0 JS errors in logcat):** Settings → Import JSON backup → pick `hasab-backup-test.json` → APPLY → "Done" alert → Home shows total balance **TMT 487.66**, account "Imported Wallet", "Spent this month: TMT 12.34 · Imported Cat", Transactions lists "Imported Cat · IMPORT-MARKER -TMT 12.34". In-session the import is fully correct. Evidence: /tmp/shots/imp-14-done.png, imp-15-after-back.png (Home 487.66), imp-21-done4.png.
+
+**What does NOT work:** the imported data does not survive an app restart. After BACK-exit, relaunch, or even `am force-stop` + fresh-process relaunch, Home shows the PRE-import data again (TMT 3,125.00 / +2000 / -60 / -40 / -25). Reproduced 3× (reloaded runtime, same-process relaunch, fresh-process cold start). Evidence: imp-16-relaunch.png, imp-18-after-forcestop.png, imp-23-final-home.png.
+
+**Analysis (not resolved):** pre-existing data persists across restarts fine, so the DB file is stable and normal writes historically reach disk. The import's `replaceAllData` (`withTransactionSync` BEGIN/DELETE/INSERT/COMMIT) commits in-session (same-connection reads see it, `reload()` shows it) but is gone after any new runtime — as if the commit lands in a runtime-scoped snapshot (expo-sqlite 58 has a serialized/in-memory "fast refresh" handoff and a cross-runtime connection cache, `deserializeDatabase` / `findCachedDatabase` in SQLiteModule.kt), or the WAL never gets checkpointed/recovered the way we'd expect. This affects only Expo Go dev runtimes as far as we can tell; import-specific vs any-write-today was NOT tested (import test budget exhausted per user directive).
+
+**Next steps for whoever picks this up:**
+1. Test whether ANY write today survives restart (e.g. add a normal transaction, force-stop, relaunch). If nothing persists, the dev environment/DB file changed (dev server restarted ~21:32 → new manifest id `6cab7aa6-…` — check whether expo-sqlite's dir tracks the manifest id).
+2. Retry import on a cold-started runtime and immediately export JSON backup to /sdcard, pull it via adb, and diff against expected — decouples "file content" from "app UI state".
+3. If still stuck, test in a dev build — the serialized-handoff path is dev-only.
+Success criteria (Done + 487.66 + IMPORT-MARKER) remain UNMET across restart; treat import as NOT verified end-to-end.
