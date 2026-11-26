@@ -27,7 +27,7 @@ export function Button({
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
-        variant === 'primary' && theme.shadows.fab,
+        variant === 'primary' && theme.shadows.button,
         {
           backgroundColor: bg,
           borderRadius: theme.radii.full,

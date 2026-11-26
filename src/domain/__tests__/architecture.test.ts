@@ -65,4 +65,13 @@ describe('architecture tripwires', () => {
     }
     expect(offenders).toEqual([]);
   });
+
+  it('the FAB glow (shadows.fab) is reserved for floating elements, inline CTAs use shadows.button', () => {
+    const button = fs.readFileSync(path.join(ROOT, 'src', 'components', 'ui', 'Button.tsx'), 'utf8');
+    expect(button).toContain('theme.shadows.button');
+    expect(button).not.toContain('theme.shadows.fab');
+
+    const fabOwners = sourceFiles.filter((file) => fs.readFileSync(file, 'utf8').includes('theme.shadows.fab'));
+    expect(fabOwners.map((file) => path.relative(ROOT, file))).toEqual([path.join('app', '(tabs)', 'home.tsx')]);
+  });
 });
