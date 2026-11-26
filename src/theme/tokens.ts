@@ -14,6 +14,8 @@ export interface ThemeTokens {
     accentDeep: string;
     accentSoft: string;
     accentText: string;
+    accent2: string;
+    skyGradient: readonly [string, string, string];
     income: string;
     expense: string;
     warning: string;
@@ -47,6 +49,7 @@ export interface ThemeTokens {
   shadows: {
     card: { shadowColor: string; shadowOffset: { width: number; height: number }; shadowOpacity: number; shadowRadius: number };
     fab: { shadowColor: string; shadowOffset: { width: number; height: number }; shadowOpacity: number; shadowRadius: number };
+    button: { shadowColor: string; shadowOffset: { width: number; height: number }; shadowOpacity: number; shadowRadius: number };
   };
 }
 
@@ -61,13 +64,15 @@ const lightColors: ThemeTokens['colors'] = {
   accentDeep: '#4F46E5',
   accentSoft: '#EEF0FF',
   accentText: '#FFFFFF',
-  income: '#059669',
+  accent2: '#C084FC',
+  skyGradient: ['#DAE0FF', '#E9E8FF', '#F6ECFF'],
+  income: '#047857',
   expense: '#E11D48',
   warning: '#D97706',
   danger: '#E11D48',
   tabBarBackground: '#FFFFFF',
   tabBarActive: '#6366F1',
-  tabBarInactive: '#94A3B8',
+  tabBarInactive: '#64748B',
   overlay: 'rgba(15, 23, 42, 0.45)',
 };
 
@@ -82,6 +87,8 @@ const darkColors: ThemeTokens['colors'] = {
   accentDeep: '#6366F1',
   accentSoft: '#232A4D',
   accentText: '#0A0E17',
+  accent2: '#7C3AED',
+  skyGradient: ['#181343', '#2B2770', '#4A2B8F'],
   income: '#34D399',
   expense: '#FB7185',
   warning: '#FBBF24',
@@ -111,6 +118,12 @@ export function buildTheme(scheme: ResolvedScheme): ThemeTokens {
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.35,
         shadowRadius: 14,
+      },
+      button: {
+        shadowColor: scheme === 'light' ? '#0F172A' : '#000000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
       },
     },
   };
