@@ -83,8 +83,15 @@ export default function TransactionsScreen() {
         { borderColor: active ? c.accent : c.border, backgroundColor: active ? c.accentSoft : c.surface, borderRadius: theme.radii.full , borderCurve: 'continuous'},
       ]}
     >
-      <Text style={{ color: active ? c.accent : c.text, fontSize: theme.type.caption, fontWeight: '600' }}>{label}</Text>
+      <Text style={[styles.chipText, { color: active ? c.accent : c.text, fontSize: theme.type.caption }]}>{label}</Text>
     </Pressable>
+  );
+
+  const filterGroup = (labelKey: Parameters<typeof t>[0], chips: React.ReactNode) => (
+    <View style={styles.filterGroup}>
+      <Text style={[styles.filterLabel, { color: c.textSecondary }]}>{t(labelKey)}</Text>
+      <View style={styles.chipRow}>{chips}</View>
+    </View>
   );
 
   return (
@@ -97,21 +104,29 @@ export default function TransactionsScreen() {
         placeholderTextColor={c.textSecondary}
         style={[styles.search, { backgroundColor: c.surface, color: c.text, borderColor: c.border, borderRadius: theme.radii.md , borderCurve: 'continuous'}]}
       />
-      <View style={styles.filters}>
-        {chip('type-all', t('common.all'), typeFilter === 'all', () => setTypeFilter('all'))}
-        {chip('type-income', t('common.income'), typeFilter === 'income', () => setTypeFilter(typeFilter === 'income' ? 'all' : 'income'))}
-        {chip('type-expense', t('common.expense'), typeFilter === 'expense', () => setTypeFilter(typeFilter === 'expense' ? 'all' : 'expense'))}
-        {chip('month-all', t('common.all'), monthFilter === 'all', () => setMonthFilter('all'))}
-        {months.slice(0, 6).map((m) => chip(`month-${m}`, m, monthFilter === m, () => setMonthFilter(monthFilter === m ? 'all' : m)))}
-      </View>
-      <View style={styles.filters}>
+      {filterGroup(
+        'transactions.filterType',
+        <>
+          {chip('type-all', t('common.all'), typeFilter === 'all', () => setTypeFilter('all'))}
+          {chip('type-income', t('common.income'), typeFilter === 'income', () => setTypeFilter(typeFilter === 'income' ? 'all' : 'income'))}
+          {chip('type-expense', t('common.expense'), typeFilter === 'expense', () => setTypeFilter(typeFilter === 'expense' ? 'all' : 'expense'))}
+        </>,
+      )}
+      {filterGroup(
+        'transactions.filterMonth',
+        <>
+          {chip('month-all', t('transactions.allMonths'), monthFilter === 'all', () => setMonthFilter('all'))}
+          {months.slice(0, 6).map((m) => chip(`month-${m}`, m, monthFilter === m, () => setMonthFilter(monthFilter === m ? 'all' : m)))}
+        </>,
+      )}
+      <View style={styles.chipRow}>
         {chip('cat-all', t('transactions.allCategories'), categoryFilter === 'all', () => setCategoryFilter('all'))}
         {categories.slice(0, 8).map((cat) =>
           chip(`cat-${cat.id}`, cat.nameKey ? categoryLabel(cat) : cat.name, categoryFilter === cat.id, () =>
             setCategoryFilter(categoryFilter === cat.id ? 'all' : cat.id)),
         )}
       </View>
-      <View style={styles.filters}>
+      <View style={styles.chipRow}>
         {chip('acc-all', t('transactions.allAccounts'), accountFilter === 'all', () => setAccountFilter('all'))}
         {accounts.map((a) => chip(`acc-${a.id}`, a.name, accountFilter === a.id, () => setAccountFilter(accountFilter === a.id ? 'all' : a.id)))}
       </View>
@@ -169,8 +184,11 @@ const styles = StyleSheet.create({
   screen: { position: 'relative' },
   title: { fontWeight: '800', marginBottom: 12 },
   search: { paddingHorizontal: 14, paddingVertical: 10, borderWidth: StyleSheet.hairlineWidth, marginBottom: 8 },
-  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 6 },
+  filterGroup: { marginBottom: 10 },
+  filterLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 },
   chip: { paddingHorizontal: 10, paddingVertical: 5, borderWidth: StyleSheet.hairlineWidth },
+  chipText: { fontWeight: '600' },
   header: { fontWeight: '700', marginTop: 10, marginBottom: 4, paddingHorizontal: 4 },
   txRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8, paddingVertical: 10 },
   flex: { flex: 1 },
