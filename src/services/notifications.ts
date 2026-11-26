@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { AndroidImportance } from 'expo-notifications/build/NotificationChannelManager.types';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 // Local-only notifications (ADR-0002): budget alerts, daily reminder, recurring posted.
@@ -15,10 +16,14 @@ Notifications.setNotificationHandler({
 });
 
 export async function ensurePermissions(): Promise<boolean> {
-  const current = await Notifications.getPermissionsAsync();
-  if (current.granted) return true;
-  const requested = await Notifications.requestPermissionsAsync();
-  return requested.granted;
+  try {
+    const current = await Notifications.getPermissionsAsync();
+    if (current.granted) return true;
+    const requested = await Notifications.requestPermissionsAsync();
+    return requested.granted;
+  } catch {
+    return false; // never let notification permission failures crash the app
+  }
 }
 
 export async function scheduleNotification(opts: {
@@ -32,11 +37,15 @@ export async function scheduleNotification(opts: {
   const trigger: Notifications.NotificationTriggerInput = opts.trigger instanceof Date
     ? { type: Notifications.SchedulableTriggerInputTypes.DATE, date: opts.trigger }
     : { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: opts.trigger.hour, minute: opts.trigger.minute };
-  await Notifications.scheduleNotificationAsync({
-    identifier: opts.id,
-    content: { title: opts.title, body: opts.body, sound: false },
-    trigger,
-  });
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: opts.id,
+      content: { title: opts.title, body: opts.body, sound: false },
+      trigger,
+    });
+  } catch {
+    // scheduling can fail in Expo Go / restricted environments — notifications are best-effort
+  }
 }
 
 export async function cancelNotification(id: string): Promise<void> {
@@ -48,10 +57,11 @@ export async function cancelAllNotifications(): Promise<void> {
 }
 
 export function androidChannelSetup(): void {
-  if (Platform.OS === 'android') {
-    void Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: AndroidImportance.DEFAULT,
-    });
-  }
+  if (Platform.OS !== 'android') return;
+  // Expo Go (SDK 53+) throws an NPE inside setNotificationChannelAsync — skip there.
+  if (Constants.appOwnership === 'expo') return;
+  void Notifications.setNotificationChannelAsync('default', {
+    name: 'default',
+    importance: AndroidImportance.DEFAULT,
+  }).catch(() => {});
 }

@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo } from 'react';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import React, { useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
 import { Screen } from '@/components/ui/Screen';
@@ -59,15 +58,9 @@ export default function HomeScreen() {
 
   const c = theme.colors;
   const statusColor = summary.status === 'exceeded' ? c.danger : summary.status === 'warning' ? c.warning : c.accent;
-  const fade = useSharedValue(0);
-  useEffect(() => {
-    fade.value = withTiming(1, { duration: 250 });
-  }, [fade]);
-  const fadeStyle = useAnimatedStyle(() => ({ opacity: fade.value }));
-
   return (
     <Screen scroll={false} style={styles.screen}>
-      <Animated.ScrollView contentContainerStyle={{ padding: theme.spacing.md, flexGrow: 1 }} style={fadeStyle}>
+      <ScrollView contentContainerStyle={{ padding: theme.spacing.md, flexGrow: 1 }}>
       <Text style={[styles.title, { color: c.text, fontSize: theme.type.title }]}>{t('home.title')}</Text>
 
       <Card style={styles.balanceCard}>
@@ -149,7 +142,7 @@ export default function HomeScreen() {
         </>
       )}
 
-      </Animated.ScrollView>
+      </ScrollView>
       <Pressable
         onPress={() => router.push({ pathname: '/transaction', params: {} })}
         style={[styles.fab, { backgroundColor: c.accent, borderRadius: theme.radii.full, borderCurve: 'continuous' }]}

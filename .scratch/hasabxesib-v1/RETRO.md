@@ -41,3 +41,19 @@ environment changes (not code changes).
   no on-device pass has happened yet.
 - v2 candidates if wanted: per-account currencies, web target, cloud sync —
   all deliberately out of v1 scope.
+
+## Addendum — on-device pass (Expo Go, Android)
+The first real-device run caught what CI couldn't:
+1. `Intl.DisplayNames`/`Intl.supportedValuesOf` don't exist in Hermes → app
+   crashed at module load (and surfaced as "missing default export" route
+   warnings). Fixed with static `currencyData.ts` + a Hermes-simulation jest
+   test. Lesson: bundle export ≠ runtime; simulate the device JS engine in tests.
+2. Worklets 0.14.0 (JS) vs 0.13.0 (Expo Go native) mismatch via
+   reanimated/gesture-handler → removed all three packages (app needs no
+   gestures/animations). Lesson: prefer zero native-animation deps when the
+   target includes Expo Go.
+3. `setNotificationChannelAsync` NPE in Expo Go → skipped when
+   `Constants.appOwnership === 'expo'`; all notification calls wrapped.
+4. Web smoke test needs `wasm` in metro assetExts for expo-sqlite → added
+   metro.config.js. Web stays dev-only (ADR-0001).
+5. `npx expo install --check` advisory (flash-list 2.3.3 vs 2.3.2) → aligned.

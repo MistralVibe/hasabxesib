@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppState, StyleSheet, Text, View } from 'react-native';
 import { Stack, Redirect } from 'expo-router';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 import { I18nProvider, useI18n } from '@/i18n';
@@ -111,7 +110,7 @@ function StartupGate({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <View style={styles.root}>
       <SafeAreaProvider>
         <ThemeProvider>
           <I18nProvider>
@@ -130,7 +129,7 @@ export default function RootLayout() {
           </I18nProvider>
         </ThemeProvider>
       </SafeAreaProvider>
-    </GestureHandlerRootView>
+    </View>
   );
 }
 

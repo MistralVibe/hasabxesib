@@ -161,3 +161,4 @@ android
 ios
 .DS_Store
 *.DS_Store
+.expo/

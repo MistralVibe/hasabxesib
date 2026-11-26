@@ -1,30 +1,28 @@
-// Full ISO 4217 currency list from ICU, with localized display names.
-// Intl objects are created once at module scope (hoisted) per performance rules.
+// ISO 4217 currency list with localized display names.
+// Names come from the STATIC currencyData.ts table (generated from ICU), because
+// Hermes has Intl.NumberFormat/DateTimeFormat but NOT Intl.DisplayNames or
+// Intl.supportedValuesOf — using those at runtime crashes the app on device.
+
+import { CURRENCY_NAMES } from './currencyData';
 
 export interface CurrencyInfo {
   code: string;
   name: string;
 }
 
-const codes: string[] = typeof Intl.supportedValuesOf === 'function'
-  ? Intl.supportedValuesOf('currency')
-  : ['USD', 'EUR', 'RUB', 'AZN'];
-
-const nameEn = new Intl.DisplayNames(['en'], { type: 'currency' });
-const nameRu = new Intl.DisplayNames(['ru'], { type: 'currency' });
-
-function nameFor(code: string, locale: 'en' | 'ru'): string {
-  const dn = locale === 'ru' ? nameRu : nameEn;
-  return dn.of(code) ?? code;
-}
-
 export function listCurrencies(locale: 'en' | 'ru' = 'en'): CurrencyInfo[] {
-  return codes.map((code) => ({ code, name: nameFor(code, locale) })).sort((a, b) => a.name.localeCompare(b.name));
+  return Object.entries(CURRENCY_NAMES)
+    .map(([code, names]) => ({ code, name: names[locale] ?? names.en ?? code }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-/** Localized symbol for a currency, e.g. USD in en -> "$", in ru -> "$" (or "долл. США" style fallback). */
+/** Localized symbol for a currency, e.g. USD in en-US -> "$". Falls back to the code. */
 export function currencySymbol(code: string, locale: string): string {
-  const formatted = new Intl.NumberFormat(locale, { style: 'currency', currency: code }).format(0);
-  // Strip digits/separators to get the symbol portion.
-  return formatted.replace(/[\d\s.,\-\u00A0]/g, '') || code;
+  try {
+    const formatted = new Intl.NumberFormat(locale, { style: 'currency', currency: code }).format(0);
+    // Strip digits/separators to get the symbol portion.
+    return formatted.replace(/[\d\s.,\-\u00A0]/g, '') || code;
+  } catch {
+    return code;
+  }
 }

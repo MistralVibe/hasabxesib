@@ -20,6 +20,16 @@ Build HasabXesib, a cross-platform (iOS+Android) personal budget tracker, direct
 - `.scratch/hasabxesib-v1/issues/01..16-*.md` — tracer-bullet tickets (all 16 implemented).
 - Fixed point for code-review: commit `2c223f7` (original main tip).
 
+## State at last update (post-device-fix round — see git log after e4320d4)
+ON-DEVICE FIXES APPLIED (Expo Go Android run): static currencyData.ts (Hermes
+has no Intl.DisplayNames/supportedValuesOf) + Hermes-sim test; reanimated/
+worklets/gesture-handler REMOVED (worklets version mismatch in Expo Go);
+notifications guarded (Expo Go channel NPE) + best-effort try/catch;
+metro.config.js adds wasm assetExt for web smoke tests; flash-list aligned to
+2.3.2 (`npx expo install --check` clean). VERIFIED GREEN: tsc, eslint 0,
+jest 11 suites / 53 tests, expo export android AND web exit 0, web dev bundle
+HTTP 200 with no DisplayNames/reanimated refs in app code.
+
 ## State at last update (commit ea509c4)
 ALL 16 TICKETS DONE + code-review fix round applied. VERIFIED GREEN at ea509c4:
 - `npx tsc --noEmit` — clean (exit 0)

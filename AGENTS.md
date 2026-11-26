@@ -30,6 +30,22 @@ the rest is convention — follow it in every edit.
 - Custom categories are NEVER translated: `nameKey: null` → literal name.
   Use `useCategoryLabel()` for any category name.
 
+## Hermes / Expo Go runtime gotchas (found by on-device testing)
+- Hermes has Intl.NumberFormat/DateTimeFormat but NOT Intl.DisplayNames or
+  Intl.supportedValuesOf — never call those at runtime. Currency names come
+  from the static `src/domain/currencyData.ts` table (generated from ICU);
+  `currencies.test.ts` has a Hermes-simulation test that deletes both APIs.
+- expo-notifications: `setNotificationChannelAsync` NPEs in Expo Go (SDK 53+)
+  — `androidChannelSetup()` skips it when `Constants.appOwnership === 'expo'`,
+  and all notification calls are wrapped so they can never crash the app.
+- react-native-reanimated / react-native-worklets / react-native-gesture-handler
+  are REMOVED: worklets JS/native version mismatch crashes in Expo Go, and the
+  app uses no gestures/animations that need them. Do not re-add without a
+  dev-build plan.
+- Web is a dev smoke-test target only (v1 ships iOS+Android, ADR-0001);
+  `metro.config.js` adds `wasm` to assetExts so expo-sqlite's web build
+  resolves. Verify with `CI=1 npx expo export --platform web`.
+
 ## UI conventions
 - Every `borderRadius` sets `borderCurve: 'continuous'` next to it (iOS).
 - Shadows: `boxShadow`, not `elevation`-only FAB shadows (Android).

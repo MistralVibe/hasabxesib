@@ -26,3 +26,31 @@ describe('currencySymbol', () => {
     expect(currencySymbol('EUR', 'de-DE')).toBe('€');
   });
 });
+
+describe('Hermes compatibility (on-device runtime)', () => {
+  const savedDisplayNames = (Intl as unknown as Record<string, unknown>).DisplayNames;
+  const savedSupportedValuesOf = (Intl as unknown as Record<string, unknown>).supportedValuesOf;
+
+  beforeEach(() => {
+    // Hermes has Intl.NumberFormat/DateTimeFormat but NOT these two.
+    delete (Intl as unknown as Record<string, unknown>).DisplayNames;
+    delete (Intl as unknown as Record<string, unknown>).supportedValuesOf;
+    jest.resetModules();
+  });
+
+  afterEach(() => {
+    (Intl as unknown as Record<string, unknown>).DisplayNames = savedDisplayNames;
+    (Intl as unknown as Record<string, unknown>).supportedValuesOf = savedSupportedValuesOf;
+    jest.resetModules();
+  });
+
+  it('listCurrencies works without Intl.DisplayNames/supportedValuesOf', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { listCurrencies: list } = require('../currencies') as typeof import('../currencies');
+    const en = list('en');
+    expect(en.length).toBeGreaterThan(100);
+    expect(en.find((c) => c.code === 'USD')?.name).toBe('US Dollar');
+    const ru = list('ru');
+    expect(ru.find((c) => c.code === 'USD')?.name).toBe('доллар США');
+  });
+});
